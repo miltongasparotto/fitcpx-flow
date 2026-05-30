@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FitCPX Flow V6.1</title>
+<title>FitCPX Flow V6.2</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
@@ -712,7 +712,7 @@ textarea{resize:vertical;min-height:80px;}
   <div class="login-box">
     <div class="login-logo">
       <div class="login-logo-mark">&#x26A1;</div>
-      <div class="login-logo-text">FitCPX<span>Flow</span><div style="font-size:12px;color:var(--t3);font-weight:600;letter-spacing:.3px;margin-top:1px">v6.1 &middot; Cloud Sync</div></div>
+      <div class="login-logo-text">FitCPX<span>Flow</span><div style="font-size:12px;color:var(--t3);font-weight:600;letter-spacing:.3px;margin-top:1px">v6.2 &middot; Cloud Sync</div></div>
     </div>
     <div class="login-title">Entrar no seu Studio</div>
     <div class="login-sub">Seus dados ficam salvos no seu pr&oacute;prio Google Drive.<br>Acesse de qualquer computador, sem perder nada.</div>
@@ -739,7 +739,7 @@ textarea{resize:vertical;min-height:80px;}
   <aside id="sidebar">
     <div class="sb-logo">
       <div class="sb-logo-mark">⚡</div>
-      <div><div class="sb-logo-text">FitCPX<span>Flow</span></div><div style="font-size:11px;color:var(--t3);font-weight:600;letter-spacing:.5px;margin-top:1px">v6.1</div></div>
+      <div><div class="sb-logo-text">FitCPX<span>Flow</span></div><div style="font-size:11px;color:var(--t3);font-weight:600;letter-spacing:.5px;margin-top:1px">v6.2</div></div>
     </div>
     <nav class="sb-nav">
       <div class="sb-section">
@@ -4706,7 +4706,7 @@ function exportData(){
   try{
     const now=new Date();const pad=n=>String(n).padStart(2,'0');
     const fn=`FitCPXFlow_v6_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}.json`;
-    const b=new Blob([JSON.stringify({_meta:{app:'FitCPX Flow CRM',version:'6.0',exportedAt:now.toISOString()},...DB},null,2)],{type:'application/json'});
+    const b=new Blob([JSON.stringify({_meta:{app:'FitCPX Flow CRM',version:'6.2',exportedAt:now.toISOString()},...DB},null,2)],{type:'application/json'});
     const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(a.href),100);
@@ -4717,25 +4717,50 @@ function importData(e){
   const file=e.target.files[0];if(!file)return;
   e.target.value='';
   const r=new FileReader();
-  r.onload=ev=>{
+  r.onload=async ev=>{
     try{
       const p=JSON.parse(ev.target.result);
       if(p._meta)delete p._meta;
       if(typeof p!=='object'||!p.alunos||!p.config){toast('t-err','⚠ Arquivo inválido ou corrompido');return;}
-      DB=p;save();
-      toast('t-ok','✅ Dados importados! Recarregando...');
-      setTimeout(()=>location.reload(),600);
+      DB=p;
+      // Salva local imediatamente
+      localStorage.setItem(STORE_KEY,JSON.stringify(DB));
+      // Sincroniza com Drive se conectado
+      if(_accessToken){
+        toast('t-ok','✅ Importado! Sincronizando com Google Drive...');
+        try{
+          await _pushToDrive(DB);
+          toast('t-ok','✅ Dados importados e sincronizados com o Drive!');
+        }catch(err){
+          toast('t-warn','⚠ Importado localmente, mas falhou no Drive: '+err.message);
+        }
+      } else {
+        toast('t-ok','✅ Dados importados!');
+      }
+      setTimeout(()=>location.reload(),900);
     }catch(ex){toast('t-err','⚠ Arquivo inválido: '+ex.message);}
   };
   r.onerror=()=>toast('t-err','⚠ Erro ao ler o arquivo');
   r.readAsText(file);
 }
-function resetDataSafe(){
-  confirm2Danger('⚠️ Resetar Todos os Dados','Apagar TUDO permanentemente? Um backup será gerado automaticamente.<br><br><strong style="color:var(--red)">NÃO pode ser desfeito.</strong>',()=>{
+async function resetDataSafe(){
+  confirm2Danger('⚠️ Resetar Todos os Dados','Apagar TUDO permanentemente? Um backup local será gerado automaticamente.<br><br><strong style="color:var(--red)">NÃO pode ser desfeito.</strong>',async()=>{
     const ok=exportData();
-    setTimeout(()=>{
-      if(ok){localStorage.removeItem(STORE_KEY);location.reload();}
-      else toast('t-err','⚠ Backup falhou — reset cancelado por segurança.');
+    if(!ok){toast('t-err','⚠ Backup falhou — reset cancelado por segurança.');return;}
+    setTimeout(async()=>{
+      // Apaga localStorage
+      localStorage.removeItem(STORE_KEY);
+      // Apaga arquivo do Drive se conectado
+      if(_accessToken&&_driveFileId){
+        try{
+          await fetch('https://www.googleapis.com/drive/v3/files/'+_driveFileId,{
+            method:'DELETE',
+            headers:{'Authorization':'Bearer '+_accessToken}
+          });
+          _driveFileId=null;
+        }catch(err){console.warn('Erro ao apagar Drive:',err);}
+      }
+      location.reload();
     },800);
   });
 }
