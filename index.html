@@ -103,6 +103,9 @@ textarea{resize:vertical;min-height:80px;}
 .task-title{font-size:14px;font-weight:600;margin-bottom:4px;}
 .task-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
 .tag{font-size:12px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:.3px;white-space:nowrap;}
+.tag-hora{background:var(--blue-lt);color:var(--blue);}
+.agenda-subhdr{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);margin:10px 2px 6px;display:flex;align-items:center;gap:6px;}
+.agenda-subhdr:first-child{margin-top:0;}
 .tag-notif{background:var(--blue-lt);color:var(--blue);}
 .tag-prazo{background:rgba(249,115,22,.1);color:#ea580c;}
 .task-date{font-size:13px;color:var(--t3);font-weight:500;}
@@ -337,6 +340,10 @@ textarea{resize:vertical;min-height:80px;}
 .cat-drag-handle{cursor:grab;color:var(--t3);flex-shrink:0;padding:2px 3px;border-radius:4px;user-select:none;display:flex;flex-direction:column;gap:2px;align-items:center;}
 .cat-drag-handle:active{cursor:grabbing;}
 .cat-drag-handle .dh-dot{width:3px;height:3px;border-radius:50%;background:currentColor;display:block;}
+.cfg-meta-chip{font-size:11px;font-weight:700;padding:1px 8px;border-radius:20px;background:var(--surface3);color:var(--t2);white-space:nowrap;display:inline-flex;align-items:center;gap:3px;}
+.flow-acc-chev{font-size:12px;color:var(--t3);flex-shrink:0;width:12px;text-align:center;transition:transform .12s;}
+.flow-acc-body{animation:accIn .15s ease;}
+@keyframes accIn{from{opacity:0}to{opacity:1}}
 .cfg-storage-track{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;}
 .cfg-storage-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--green),#00d4a4);transition:width .4s;}
 .cfg-storage-fill.warn{background:linear-gradient(90deg,var(--yellow),#f97316);}
@@ -683,7 +690,7 @@ textarea{resize:vertical;min-height:80px;}
   <aside id="sidebar">
     <div class="sb-logo">
       <div class="sb-logo-mark">⚡</div>
-      <div><div class="sb-logo-text">FitCPX<span>Flow</span></div><div style="font-size:11px;color:var(--t3);font-weight:600;letter-spacing:.5px;margin-top:1px">v6.0</div></div>
+      <div><div class="sb-logo-text">FitCPX<span>Flow</span></div><div style="font-size:11px;color:var(--t3);font-weight:600;letter-spacing:.5px;margin-top:1px">v6.7</div></div>
     </div>
     <nav class="sb-nav">
       <div class="sb-section">
@@ -730,6 +737,7 @@ textarea{resize:vertical;min-height:80px;}
         <div class="fg"><label>Email</label><input id="f-email" type="email" placeholder="email@exemplo.com"></div>
         <div class="fg"><label>Nascimento</label><input id="f-nasc" type="date"></div>
       </div>
+      <div class="fg"><label>Apelido / nome curto <span style="font-weight:400;color:var(--t3);font-size:11px">(opcional — usado nas notificações)</span></label><input id="f-apelido" type="text" placeholder="Ex: A. Cristina, A. Marcos" oninput="_setModalDirty('m-aluno')"><div class="hint">Vazio = usa nome e sobrenome. Útil para diferenciar clientes de nome parecido.</div></div>
       <div class="fg"><label>Observações</label><textarea id="f-obs" placeholder="Objetivos, restrições, histórico..."></textarea></div>
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" onclick="confirmCloseModal('m-aluno','aluno')">Cancelar</button><button class="btn btn-primary" onclick="saveAluno()">✅ Salvar</button></div>
@@ -767,6 +775,11 @@ textarea{resize:vertical;min-height:80px;}
           <input id="t-dias" type="number" min="0" placeholder="Ex: 7" style="text-align:center" oninput="updateTaskDateFromDays(this.value)">
           <div id="t-dias-hint" class="hint" style="margin-top:4px"></div>
         </div>
+      </div>
+      <div class="fg" id="t-hora-wrap">
+        <label id="t-hora-label">Horário (opcional)</label>
+        <input id="t-hora" type="time" oninput="updateTaskTimeUI()" style="max-width:160px">
+        <div id="t-hora-end" class="hint" style="margin-top:4px"></div>
       </div>
       <div class="fg"><label>Observações</label><textarea id="t-obs" placeholder="Observações adicionais..."></textarea></div>
       <div class="fg">
@@ -944,6 +957,22 @@ textarea{resize:vertical;min-height:80px;}
   </div>
 </div>
 
+<div class="modal-bg" id="m-resched">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><div class="modal-title">📅 Reagendar</div><div class="modal-close" onclick="closeModal('m-resched')">✕</div></div>
+    <div class="modal-body">
+      <div id="resched-sub" style="font-size:13px;color:var(--t2);font-weight:600;margin-bottom:12px"></div>
+      <input type="hidden" id="resched-cat">
+      <div class="form-row">
+        <div class="fg"><label>Nova data *</label><input id="resched-data" type="date"></div>
+        <div class="fg"><label>Horário</label><input id="resched-hora" type="time" oninput="updateReschedEnd()"></div>
+      </div>
+      <div id="resched-end" class="hint" style="margin-top:2px"></div>
+      <div class="hint" style="margin-top:8px">Alterar uma etapa recalcula automaticamente as tarefas seguintes do fluxo.</div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal('m-resched')">Cancelar</button><button class="btn btn-primary" onclick="saveReschedule()">✅ Salvar</button></div>
+  </div>
+</div>
 <div class="modal-bg" id="m-cat">
   <div class="modal" style="max-width:500px">
     <div class="modal-head"><div class="modal-title" id="m-cat-ttl">🏷️ Nova Categoria</div><div class="modal-close" onclick="confirmCloseModal('m-cat','cat')">✕</div></div>
@@ -960,6 +989,11 @@ textarea{resize:vertical;min-height:80px;}
         <label>Antecedência de urgência (dias)</label>
         <input id="cat-urgdays" type="number" min="0" max="90" placeholder="Padrão: configuração global" style="max-width:220px">
         <div class="hint">Deixe vazio para usar o valor global. Útil para renovações (ex: 15 dias de antecedência).</div>
+      </div>
+      <div class="fg">
+        <label>Duração da tarefa (minutos)</label>
+        <input id="cat-duracao" type="number" min="0" max="600" placeholder="Vazio = tarefa comum (dia todo)" style="max-width:220px">
+        <div class="hint">Se preenchido, tarefas desta categoria exigem horário e calculam o término automaticamente (ex: 30 min).</div>
       </div>
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" onclick="confirmCloseModal('m-cat','cat')">Cancelar</button><button class="btn btn-primary" onclick="saveCat()">✅ Salvar Categoria</button></div>
@@ -1151,6 +1185,7 @@ DB.alunos.forEach(al=>{
   }
 });
 if(DB.tasks.length===0)regenAllTasks();
+DB.alunos.forEach(al=>{if((al.status==='pausado'||al.status==='inativo')&&!al.statusSince)al.statusSince=todayStr();});
 function save(){localStorage.setItem(STORE_KEY,JSON.stringify(DB));}
 
 /* ═══════════════════════════════
@@ -1164,6 +1199,7 @@ function computeChainDate(taskId,alunoId,_depth=0){
   const t=DB.tasks.find(x=>x.id===taskId);if(!t)return todayStr();
   if(t.manual)return t.data||todayStr();
   if(t.isTrigger)return t.data||todayStr(); // trigger tasks have fixed date
+  if(t.over)return t.over; // explicit reschedule override (cascades to children via this same path)
   const al=DB.alunos.find(a=>a.id===alunoId);if(!al)return t.data||todayStr();
 
   // Find which assigned flow this task belongs to
@@ -1309,10 +1345,14 @@ function replaceVars(msg,al){
     .replace(/{studio}/g,DB.config.studioName||'Studio');
 }
 
-function pendingCount(){return DB.tasks.filter(t=>!t.done&&diffDays(liveDate(t),todayStr())<=0&&!isTaskBlocked(t)).length;}
-function urgentCount(){return DB.tasks.filter(t=>{const d=diffDays(liveDate(t),todayStr());return!t.done&&!isTaskBlocked(t)&&(d<0||(d<=taskUrgDays(t)&&t.tipo==='prazo'));}).length;}
-function todayCount(){return DB.tasks.filter(t=>!t.done&&liveDate(t)===todayStr()&&!isTaskBlocked(t)).length;}
-function waCount(){return DB.tasks.filter(t=>{const rc=resolveCatId(t.cat);return!t.done&&!isTaskBlocked(t)&&diffDays(liveDate(t),todayStr())<=0&&(['3','5','2'].includes(rc)||['monit','follow','treino'].includes(t.cat));}).length;}
+function alunoActiveForTasks(al){return !!al&&!al.archived&&al.status!=='pausado'&&al.status!=='inativo';}
+function needsReview(al){if(!al||al.archived)return false;const s=al.status;if(s!=='pausado'&&s!=='inativo')return false;return !!al.statusSince&&diffDays(todayStr(),al.statusSince)>=30;}
+function displayName(al){if(!al)return'';if(al.apelido&&al.apelido.trim())return al.apelido.trim();const p=(al.nome||'').trim().split(/\s+/).filter(Boolean);if(p.length<=1)return p[0]||'';return p[0]+' '+p[p.length-1];}
+function taskVisible(t){if(!t.alunoId)return true;return alunoActiveForTasks(DB.alunos.find(a=>a.id===t.alunoId));}
+function pendingCount(){return DB.tasks.filter(t=>taskVisible(t)&&!t.done&&diffDays(liveDate(t),todayStr())<=0&&!isTaskBlocked(t)).length;}
+function urgentCount(){return DB.tasks.filter(t=>{const d=diffDays(liveDate(t),todayStr());return taskVisible(t)&&!t.done&&!isTaskBlocked(t)&&(d<0||(d<=taskUrgDays(t)&&t.tipo==='prazo'));}).length;}
+function todayCount(){return DB.tasks.filter(t=>taskVisible(t)&&!t.done&&liveDate(t)===todayStr()&&!isTaskBlocked(t)).length;}
+function waCount(){return DB.tasks.filter(t=>{const rc=resolveCatId(t.cat);return taskVisible(t)&&!t.done&&!isTaskBlocked(t)&&diffDays(liveDate(t),todayStr())<=0&&(['3','5','2'].includes(rc)||['monit','follow','treino'].includes(t.cat));}).length;}
 
 function guessWAKey(task){
   const cat=resolveCatId(task.cat);
@@ -1325,7 +1365,7 @@ function guessWAKey(task){
 function updateBadges(){
   const set=(id,v)=>{const el=document.getElementById(id);if(el){el.textContent=v;el.style.display=v?'':'none';}};
   const today=todayStr();const ud=urgDays();
-  const attnCount=DB.tasks.filter(t=>{if(t.done||isTaskBlocked(t))return false;const d=diffDays(liveDate(t),today);return d<0||d===0||(d<=ud&&t.tipo==='prazo');}).length;
+  const attnCount=DB.tasks.filter(t=>{if(!taskVisible(t)||t.done||isTaskBlocked(t))return false;const d=diffDays(liveDate(t),today);return d<0||d===0||(d<=ud&&t.tipo==='prazo');}).length;
   set('bdg-dash',urgentCount());set('bdg-tasks',attnCount);set('bdg-wa',waCount());
 }
 
@@ -1350,6 +1390,9 @@ function catLabel(cat){const d=getCatDefs().find(c=>c.id===resolveCatId(cat))||g
 function catIcon(cat){const d=getCatDefs().find(c=>c.id===resolveCatId(cat))||getCatDefs().find(c=>c.id===cat);return d?d.icon:'📋';}
 function catColor(cat){const d=getCatDefs().find(c=>c.id===resolveCatId(cat))||getCatDefs().find(c=>c.id===cat);return d?d.color:'#6b7280';}
 function catTagStyle(cat){const c=catColor(cat);return`background:${c}1a;color:${c};`;}
+function catDuracao(cat){const c=getCatDefs().find(x=>x.id===resolveCatId(cat))||getCatDefs().find(x=>x.id===cat);return(c&&c.duracao>0)?c.duracao:0;}
+function addMinHHMM(hhmm,min){if(!hhmm)return'';const p=hhmm.split(':');const tot=(+p[0])*60+(+p[1])+min;const nh=Math.floor(((tot%1440)+1440)%1440/60),nm=((tot%60)+60)%60;return String(nh).padStart(2,'0')+':'+String(nm).padStart(2,'0');}
+function taskTimeLabel(t){if(!t||!t.hora)return'';const dur=catDuracao(t.cat);return dur>0?`${t.hora}–${addMinHHMM(t.hora,dur)}`:t.hora;}
 
 /* ═══════════════════════════════
    THEME & NAV
@@ -1408,7 +1451,7 @@ function taskRowHTML(task,showAluno=false){
   return`<div class="task-item ${tiCls}" id="tr-${task.id}">
     <div class="chk ${task.done?'on':''}" onclick="toggleTaskDone('${task.id}')" title="${task.done?'Reabrir':'Marcar feito'}">${task.done?'✓':''}</div>
     <div class="task-body">
-      <div class="task-title">${h(task.titulo)}${showAluno&&al?` <span style="font-weight:500;color:var(--t2)">— ${h(al.nome.split(' ')[0])}</span>`:''}
+      <div class="task-title">${h(task.titulo)}${showAluno&&al?` <span style="font-weight:500;color:var(--t2)">— ${h(displayName(al))}</span>`:''}
       </div>
       <div class="task-meta">
         <span class="tag" style="${catTagStyle(task.cat)}">${catIcon(task.cat)} ${catLabel(task.cat)}</span>
@@ -1439,27 +1482,30 @@ function dashTaskItemHTML(t){
   const catDef=getCatDefs().find(c=>c.id===t.cat)||{};
   const tipoIcon=t.tipo==='prazo'?'⏰':'📌';
   const waKey=guessWAKey(t);
-  const doneBtn=`<div class="ta-btn" onclick="event.stopPropagation();toggleTaskDone('${t.id}')" title="${t.tipo==='prazo'?'Marcar feito':'Marcar visto'}" style="font-size:13px">${t.tipo==='prazo'?'✓':'👁'}</div>`;
+  const doneBtn=`<div class="ta-btn" onclick="event.stopPropagation();${t.merged?`toggleMergedTask('${t.id}',true${al?`,'${al.id}'`:''})`:`toggleTaskDone('${t.id}')`}" title="${t.tipo==='prazo'?'Marcar feito':'Marcar visto'}" style="font-size:13px">${t.tipo==='prazo'?'✓':'👁'}</div>`;
+  const reschedBtn=`<div class="ta-btn" onclick="event.stopPropagation();openReschedule('${t.id}')" title="Reagendar data/horário" style="font-size:13px">📅</div>`;
   const waBtn=al?`<div class="ta-btn wa" onclick="event.stopPropagation();openWA('${al.id}','${waKey}')" title="WhatsApp" style="font-size:13px">💬</div>`:'';
-  const clientName=al?h(al.nome.split(' ')[0]):'—';
+  const clientName=al?h(displayName(al)):'—';
   const catLabel_=catDef.label||catLabel(t.cat);
   const catColor=catDef.color||'var(--blue)';
+  const horaLbl=taskTimeLabel(t);const horaTag=horaLbl?`<span class="tag tag-hora" style="font-size:11px">🕐 ${horaLbl}</span>`:'';
   return`<div class="dt-item ${tiCls}" onclick="${al?`navAluno('${al.id}')`:''}">
     <div class="dt-body">
       <div class="dt-line1"><strong style="color:var(--t1)">${clientName}</strong> <span style="font-weight:500;color:var(--t2)">· ${h(t.titulo||catLabel_)}</span></div>
       <div class="dt-line2">
         <span style="font-size:12px">${tipoIcon}</span>
         <span style="font-size:12px;font-weight:600;padding:1px 6px;border-radius:20px;background:${catColor}22;color:${catColor}">${catLabel_}</span>
+        ${horaTag}
         <span class="task-date ${dl.cls}" style="font-size:12px">${dl.text}</span>
       </div>
     </div>
-    <div class="dt-actions">${doneBtn}${waBtn}</div>
+    <div class="dt-actions">${reschedBtn}${doneBtn}${waBtn}</div>
   </div>`;
 }
 
 function renderDashboard(){
   const today=todayStr();const ud=urgDays();
-  const allPending=DB.tasks.filter(t=>!t.done);
+  const allPending=DB.tasks.filter(t=>taskVisible(t)&&!t.done);
   const overdue=allPending.filter(t=>diffDays(liveDate(t),today)<0);
   const todayT=allPending.filter(t=>liveDate(t)===today);
   const urgentT=allPending.filter(t=>{const d=diffDays(liveDate(t),today);return d>=0&&d<=ud&&t.tipo==='prazo';});
@@ -1538,7 +1584,7 @@ function renderDashboard(){
     displayTasks=allPending.sort((a,b)=>liveDate(a).localeCompare(liveDate(b)));
   }
   const taskFilterBtns=[['urgente','Urgentes'],['7d','7 dias'],['30d','30 dias'],['all','Todos']].map(([v,l])=>`<button class="btn btn-xs ${dashTaskFilter===v?'btn-primary':'btn-ghost'}" onclick="window._dashTaskFilter='${v}';renderPage()">${l}</button>`).join('');
-  const taskListHtml=displayTasks.length?displayTasks.map(t=>dashTaskItemHTML(t)).join(''):`<div class="empty" style="padding:20px"><div class="empty-icon">🎉</div><p>Tudo em dia!</p></div>`;
+  const taskListHtml=displayTasks.length?mergeTasks(displayTasks).map(t=>dashTaskItemHTML(t)).join(''):`<div class="empty" style="padding:20px"><div class="empty-icon">🎉</div><p>Tudo em dia!</p></div>`;
 
   // Pipeline (full width)
   const catDefs=getCatDefs();
@@ -1644,11 +1690,26 @@ let taskFilter='all',taskSearch='',taskTab='calendario';
 
 function renderTarefas(){
   if(!window._calListFilter)window._calListFilter='hoje';
-  setTimeout(renderCalGrid,0);
+  setTimeout(()=>{renderCalGrid();calUpdHoraEnd();},0);
   return renderAgendaCalendario();
 }
 
 
+function agendaSortCmp(a,b){
+  if(+a.done!==+b.done)return +a.done-+b.done;
+  const ka=liveDate(a.tasks[0])+(a.tasks[0].hora?('_'+a.tasks[0].hora):'~');
+  const kb=liveDate(b.tasks[0])+(b.tasks[0].hora?('_'+b.tasks[0].hora):'~');
+  return ka.localeCompare(kb);
+}
+function renderAgendaList(tasks){
+  if(!tasks.length)return`<div class="empty" style="padding:24px"><div class="empty-icon">📅</div><p>Sem tarefas neste período</p></div>`;
+  const hasHora=m=>!!(m.tasks?m.tasks[0].hora:m.hora);
+  const timed=tasks.filter(hasHora),allday=tasks.filter(m=>!hasHora(m));
+  let out='';
+  if(timed.length)out+=`<div class="agenda-subhdr">🕐 Com horário</div>`+timed.map(calTaskCard).join('');
+  if(allday.length)out+=(timed.length?`<div class="agenda-subhdr">📅 Dia todo</div>`:'')+allday.map(calTaskCard).join('');
+  return out;
+}
 function calTaskCard(m){
   const tasks=m.tasks||[m];
   const t0=m.tasks?m.tasks[0]:m;
@@ -1662,7 +1723,7 @@ function calTaskCard(m){
   const al=DB.alunos.find(a=>a.id===t0.alunoId);
   const clickTarget=al?`onclick="navAluno('${al.id}')"` : '';
   const cursor=al?'pointer':'default';
-  const clientName=al?h(al.nome.split(' ')[0]):'';
+  const clientName=al?h(displayName(al)):'';
   // Fluxo names for merged badge
   const fluxoBadge=isMerged?(()=>{
     const fluxoNames=tasks.map(t=>{
@@ -1677,6 +1738,8 @@ function calTaskCard(m){
   const actionBtn=allDone
     ?`<div class="ta-btn" onclick="event.stopPropagation();calToggleDoneMany('${ids}',false)" title="Reativar" style="color:var(--green);border-color:var(--green)">↩</div>`
     :`<div class="ta-btn" onclick="event.stopPropagation();calToggleDoneMany('${ids}',true)" title="${t0.tipo==='prazo'?'Marcar feito':'Marcar visto'}">${t0.tipo==='prazo'?'✓':'👁'}</div>`;
+  const reschedBtn=allDone?'':`<div class="ta-btn" onclick="event.stopPropagation();openReschedule('${ids}')" title="Reagendar data/horário">📅</div>`;
+  const horaLbl=taskTimeLabel(t0);const horaTag=horaLbl?`<span class="tag tag-hora">🕐 ${horaLbl}</span>`:'';
   const waKey=guessWAKey(t0);
   const waBtn=al?`<div class="ta-btn wa" onclick="event.stopPropagation();openWA('${al.id}','${waKey}')" title="WhatsApp">💬</div>`:'';
   return`<div class="task-item ${tiCls}" style="${doneStyle}cursor:${cursor}" ${clickTarget}>
@@ -1685,13 +1748,14 @@ function calTaskCard(m){
       </div>
       <div class="task-meta">
         <span class="tag" style="${catTagStyle(t0.cat)}">${catIcon(t0.cat)} ${catLabel(t0.cat)}</span>
+        ${horaTag}
         <span class="tag ${t0.tipo==='prazo'?'tag-prazo':'tag-notif'}">${t0.tipo==='prazo'?'⏰ Prazo':'📌 Notif'}</span>
         ${!allDone?`<span class="task-date ${dl.cls}">${dl.text}</span>`:`<span class="task-date" style="color:var(--t3)">${dl.text}</span>`}
         ${fluxoBadge}
         ${allDone?'<span style="font-size:11px;font-weight:700;padding:1px 6px;border-radius:20px;background:var(--green-lt);color:var(--green-dk)">✓ Feito</span>':''}
       </div>
     </div>
-    <div class="task-actions" onclick="event.stopPropagation()">${actionBtn}${waBtn}</div>
+    <div class="task-actions" onclick="event.stopPropagation()">${reschedBtn}${actionBtn}${waBtn}</div>
   </div>`;
 }
 
@@ -1709,7 +1773,7 @@ function renderAgendaCalendario(){
     else if(filter==='hoje') raw=DB.tasks.filter(t=>{if(t.done&&t.doneDate!==today)return false;return liveDate(t)===today;}).sort((a,b)=>+a.done-+b.done);
     else if(filter==='7d'){const lim=addDays(today,7);raw=DB.tasks.filter(t=>!t.done&&liveDate(t)>today&&liveDate(t)<=lim).sort((a,b)=>liveDate(a).localeCompare(liveDate(b)));}
     else if(filter==='30d'){const lim=addDays(today,30);raw=DB.tasks.filter(t=>!t.done&&liveDate(t)>today&&liveDate(t)<=lim).sort((a,b)=>liveDate(a).localeCompare(liveDate(b)));}
-    return mergeAgendaTasks(raw).sort((a,b)=>+a.done-+b.done||liveDate(a.tasks[0]).localeCompare(liveDate(b.tasks[0])));
+    return mergeAgendaTasks(raw.filter(taskVisible)).sort(agendaSortCmp);
   }
 
   function buildPanel(filter){
@@ -1720,7 +1784,7 @@ function renderAgendaCalendario(){
     const dayNav=filter==='dia'
       ?`<div style="display:flex;align-items:center;gap:4px"><button class="btn btn-ghost btn-sm" onclick="calNavDay(-1)" style="padding:4px 8px">← Dia ant.</button><div style="font-size:14px;font-weight:700">${panelTitle}</div><button class="btn btn-ghost btn-sm" onclick="calNavDay(1)" style="padding:4px 8px">Próx. dia →</button></div>`
       :`<div style="font-size:14px;font-weight:700">${panelTitle}</div>`;
-    const listHTML=tasks.length?tasks.map(t=>calTaskCard(t)).join(''):`<div class="empty" style="padding:24px"><div class="empty-icon">📅</div><p>Sem tarefas neste período</p></div>`;
+    const listHTML=renderAgendaList(tasks);
     return`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <div>${dayNav}</div>
         <div style="display:flex;gap:6px">${filterBtns}</div>
@@ -1754,7 +1818,7 @@ function renderAgendaCalendario(){
       ${sep}
       <div style="margin-bottom:10px">
         ${fldLbl('Categoria')}
-        <select id="cadd-cat" style="font-size:13px;width:100%">${catOpts}<option value="__new__" style="color:var(--green-dk);font-weight:700">+ Nova Categoria…</option></select>
+        <select id="cadd-cat" onchange="calUpdHoraEnd()" style="font-size:13px;width:100%">${catOpts}<option value="__new__" style="color:var(--green-dk);font-weight:700">+ Nova Categoria…</option></select>
       </div>
       ${sep}
       <div style="margin-bottom:10px">
@@ -1770,6 +1834,12 @@ function renderAgendaCalendario(){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div>${fldLbl('Data')}<input id="cadd-data" type="date" value="${calSel}" style="font-size:13px;width:100%" oninput="calUpdDias()"></div>
         <div>${fldLbl('Dias a partir de hoje')}<input id="cadd-dias" type="number" min="0" placeholder="ex: 7" style="font-size:13px;width:100%;text-align:center" oninput="calUpdData(this.value)"></div>
+      </div>
+      ${sep}
+      <div style="margin-bottom:10px">
+        <label style="font-size:12px;font-weight:700;color:var(--t2);display:block;margin-bottom:3px">Horário <span style="font-weight:400;color:var(--t3);font-size:11px">(opcional — vazio = dia todo)</span></label>
+        <input id="cadd-hora" type="time" style="font-size:13px;width:100%" oninput="calUpdHoraEnd()">
+        <div id="cadd-hora-end" class="hint" style="margin-top:4px"></div>
       </div>
       ${sep}
       <div style="margin-bottom:10px">
@@ -1835,6 +1905,15 @@ function calSwitchAddTab(tab){
 }
 function calUpdDias(){const d=document.getElementById('cadd-data')?.value;const el=document.getElementById('cadd-dias');if(!d||!el)return;const diff=diffDays(d,todayStr());el.value=Math.max(0,diff);}
 function calUpdData(v){const n=parseInt(v,10);if(isNaN(n)||n<0)return;const el=document.getElementById('cadd-data');if(el)el.value=addDays(todayStr(),n);}
+function calUpdHoraEnd(){
+  const cat=document.getElementById('cadd-cat')?.value;const dur=catDuracao(cat);
+  const hora=document.getElementById('cadd-hora')?.value||'';
+  const end=document.getElementById('cadd-hora-end');if(!end)return;
+  if(dur>0&&hora)end.innerHTML=`<span style="color:var(--green-dk)">⏱ Término: <strong>${addMinHHMM(hora,dur)}</strong> (${dur} min)</span>`;
+  else if(dur>0)end.innerHTML='<span style="color:var(--red)">⚠ Esta categoria exige horário</span>';
+  else if(hora)end.textContent='';
+  else end.innerHTML='<span style="color:var(--t3)">Sem horário = tarefa de dia todo</span>';
+}
 function calUpdFluxoDias(){const d=document.getElementById('cadd-fluxo-date')?.value;const el=document.getElementById('cadd-fluxo-dias');if(!d||!el)return;const diff=diffDays(d,todayStr());el.value=Math.max(0,diff);}
 function calUpdFluxoData(v){const n=parseInt(v,10);if(isNaN(n)||n<0)return;const el=document.getElementById('cadd-fluxo-date');if(el)el.value=addDays(todayStr(),n);}
 
@@ -1854,10 +1933,13 @@ function calAddTask(){
   const obs=document.getElementById('cadd-obs').value.trim();
   const urgDaysVal=parseInt(document.getElementById('cadd-urgdays')?.value||'',10);
   const urgDaysField=urgDaysVal>0?urgDaysVal:undefined;
-  DB.tasks.push({id:'t'+DB.taskIdSeq++,alunoId,titulo,cat:catVal,tipo,data,done:false,doneDate:null,manual:true,obs,...(urgDaysField?{urgDays:urgDaysField}:{})});
+  const horaVal=document.getElementById('cadd-hora')?.value||'';
+  if(catDuracao(catVal)>0&&!horaVal){toast('t-err','⚠ Esta categoria exige horário');return;}
+  DB.tasks.push({id:'t'+DB.taskIdSeq++,alunoId,titulo,cat:catVal,tipo,data,hora:horaVal,done:false,doneDate:null,manual:true,obs,...(urgDaysField?{urgDays:urgDaysField}:{})});
   if(alunoId)addHistory(alunoId,'manual_task','📝 Tarefa criada: '+titulo,'');
   save();updateBadges();
   document.getElementById('cadd-titulo').value='';document.getElementById('cadd-obs').value='';
+  if(document.getElementById('cadd-hora'))document.getElementById('cadd-hora').value='';
   if(document.getElementById('cadd-urgdays'))document.getElementById('cadd-urgdays').value='';
   toast('t-ok','✅ Tarefa criada!');renderCalPanel();renderCalGrid();
 }
@@ -1919,13 +2001,13 @@ function renderCalPanel(){
     else if(filter==='hoje') raw=DB.tasks.filter(t=>{if(t.done&&t.doneDate!==today)return false;return liveDate(t)===today;}).sort((a,b)=>+a.done-+b.done);
     else if(filter==='7d'){const lim=addDays(today,7);raw=DB.tasks.filter(t=>!t.done&&liveDate(t)>today&&liveDate(t)<=lim).sort((a,b)=>liveDate(a).localeCompare(liveDate(b)));}
     else if(filter==='30d'){const lim=addDays(today,30);raw=DB.tasks.filter(t=>!t.done&&liveDate(t)>today&&liveDate(t)<=lim).sort((a,b)=>liveDate(a).localeCompare(liveDate(b)));}
-    return mergeAgendaTasks(raw).sort((a,b)=>+a.done-+b.done||liveDate(a.tasks[0]).localeCompare(liveDate(b.tasks[0])));
+    return mergeAgendaTasks(raw.filter(taskVisible)).sort(agendaSortCmp);
   }
   const tasks=gt2(f);
   const fb=[{id:'hoje',label:'Hoje'},{id:'7d',label:'em 7 Dias'},{id:'30d',label:'em 30 Dias'}]
     .map(b=>`<button class="btn btn-sm${f===b.id?' btn-primary':' btn-ghost'}" onclick="window._calListFilter='${b.id}';renderCalPanel()">${b.label}</button>`).join('');
   const pt=f==='dia'?`📌 ${fmtDate(calSel)}`:f==='hoje'?`📌 Hoje — ${fmtDate(today)}`:f==='7d'?'📆 Próximos 7 dias':'🗓️ Próximos 30 dias';
-  const lh=tasks.length?tasks.map(t=>cCard(t)).join(''):`<div class="empty" style="padding:24px"><div class="empty-icon">📅</div><p>Sem tarefas neste período</p></div>`;
+  const lh=renderAgendaList(tasks);
   const titleBlock=f==='dia'
     ?`<div style="display:flex;align-items:center;gap:4px"><button class="btn btn-ghost btn-sm" onclick="calNavDay(-1)" style="padding:4px 8px">← Dia ant.</button><div style="font-size:14px;font-weight:700">${pt}</div><button class="btn btn-ghost btn-sm" onclick="calNavDay(1)" style="padding:4px 8px">Próx. dia →</button></div>`
     :`<div style="font-size:14px;font-weight:700">${pt}</div>`;
@@ -1957,11 +2039,13 @@ function saveTask(){
   const titulo=tituloRaw||catLabel;
   const urgDaysVal=parseInt(document.getElementById('t-urgdays')?.value||'',10);
   const urgDaysField=urgDaysVal>0?urgDaysVal:undefined;
+  const horaVal=document.getElementById('t-hora')?.value||'';
+  if(catDuracao(catVal)>0&&!horaVal){toast('t-err','⚠ Esta categoria exige horário');return;}
   if(_editingTaskId){
     // Edit mode
     const t=DB.tasks.find(x=>x.id===_editingTaskId);if(!t)return;
     t.titulo=titulo;t.cat=document.getElementById('t-cat').value;
-    t.tipo=document.getElementById('t-tipo').value;t.data=data;
+    t.tipo=document.getElementById('t-tipo').value;t.data=data;t.hora=horaVal;
     t.obs=document.getElementById('t-obs').value.trim();
     if(urgDaysField)t.urgDays=urgDaysField;else delete t.urgDays;
     if(t.alunoId)addHistory(t.alunoId,'task_edit','✏️ Tarefa editada: '+titulo,'');
@@ -1972,7 +2056,7 @@ function saveTask(){
   }
   const wrap=document.getElementById('t-aluno-wrap');
   const alunoId=wrap&&wrap.style.display!=='none'?document.getElementById('t-aluno').value:(currentAlunoId||'');
-  DB.tasks.push({id:'t'+DB.taskIdSeq++,alunoId,titulo,cat:document.getElementById('t-cat').value,tipo:document.getElementById('t-tipo').value,data,done:false,doneDate:null,manual:true,obs:document.getElementById('t-obs').value.trim(),...(urgDaysField?{urgDays:urgDaysField}:{})});
+  DB.tasks.push({id:'t'+DB.taskIdSeq++,alunoId,titulo,cat:document.getElementById('t-cat').value,tipo:document.getElementById('t-tipo').value,data,hora:horaVal,done:false,doneDate:null,manual:true,obs:document.getElementById('t-obs').value.trim(),...(urgDaysField?{urgDays:urgDaysField}:{})});
   if(alunoId)addHistory(alunoId,'manual_task','📝 Tarefa criada: '+titulo,'');
   save();closeModal('m-task');updateBadges();
   if(currentPage==='aluno_detail'&&currentAlunoId)navAluno(currentAlunoId);else renderPage();
@@ -1997,9 +2081,10 @@ function initTaskForm(date){
   if(catSel){
     catSel.innerHTML=getCatDefs().map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('')
       +'<option value="__new__" style="font-style:italic;color:var(--green-dk)">➕ Nova categoria...</option>';
-    catSel.onchange=function(){if(this.value==='__new__'){this.value=getCatDefs()[0]?.id||'';closeModal('m-task');openModal('m-cat');initCatForm(null);}};
+    catSel.onchange=function(){if(this.value==='__new__'){this.value=getCatDefs()[0]?.id||'';closeModal('m-task');openModal('m-cat');initCatForm(null);return;}updateTaskTimeUI();};
   }
-  updateTaskDaysHint();
+  const _h1=document.getElementById('t-hora');if(_h1)_h1.value='';
+  updateTaskDaysHint();updateTaskTimeUI();
 }
 function openEditManualTask(taskId,alunoId){
   const t=DB.tasks.find(x=>x.id===taskId);if(!t||!t.manual)return;
@@ -2016,12 +2101,27 @@ function openEditManualTask(taskId,alunoId){
   if(catSel){
     catSel.innerHTML=getCatDefs().map(c=>`<option value="${c.id}"${t.cat===c.id?' selected':''}>${c.icon} ${c.label}</option>`).join('')
       +'<option value="__new__" style="font-style:italic;color:var(--green-dk)">➕ Nova categoria...</option>';
-    catSel.onchange=function(){if(this.value==='__new__'){this.value=getCatDefs()[0]?.id||'';closeModal('m-task');openModal('m-cat');initCatForm(null);}};
+    catSel.onchange=function(){if(this.value==='__new__'){this.value=getCatDefs()[0]?.id||'';closeModal('m-task');openModal('m-cat');initCatForm(null);return;}updateTaskTimeUI();};
   }
   document.getElementById('t-tipo').value=t.tipo||'notif';
-  updateTaskDaysHint();openModal('m-task');
+  const _h2=document.getElementById('t-hora');if(_h2)_h2.value=t.hora||'';
+  updateTaskDaysHint();updateTaskTimeUI();openModal('m-task');
 }
 function _getTaskTipo(){return document.getElementById('t-tipo')?.value||'notif';}
+function updateTaskTimeUI(){
+  const catEl=document.getElementById('t-cat');if(!catEl)return;
+  const dur=catDuracao(catEl.value);
+  const lbl=document.getElementById('t-hora-label');
+  const hora=document.getElementById('t-hora')?.value||'';
+  const end=document.getElementById('t-hora-end');
+  if(lbl)lbl.textContent=dur>0?`Horário * — duração ${dur} min`:'Horário (opcional)';
+  if(end){
+    if(dur>0&&hora)end.innerHTML=`<span style="color:var(--green-dk)">⏱ Término: <strong>${addMinHHMM(hora,dur)}</strong></span>`;
+    else if(dur>0)end.innerHTML='<span style="color:var(--red)">⚠ Esta categoria exige horário</span>';
+    else if(hora)end.textContent='';
+    else end.innerHTML='<span style="color:var(--t3)">Sem horário = tarefa de dia todo</span>';
+  }
+}
 function updateTaskDaysHint(){
   const tipo=_getTaskTipo();
   const dateEl=document.getElementById('t-data');
@@ -2076,32 +2176,57 @@ function updateTaskDateFromDays(val){
 ═══════════════════════════════ */
 let alunoSearch='',showArchivedAlunos=false,alunoFilters={},alunoSort={field:'nome',dir:'asc'};
 function clearAlunoFilters(){alunoFilters={};alunoSearch='';renderPage();}
-function renderAlunos(){
+function alunoSortVal(a,field){
+  if(field==='modId'){const m=DB.modalidades.find(x=>x.id===a.modId);return m?m.nome.toLowerCase():'zzzz';}
+  if(field==='fluxo'){const af=(a.fluxos||[])[0];const f=af&&DB.fluxos.find(x=>x.id===af.id);return f?f.nome.toLowerCase():'zzzz';}
+  if(field==='status')return({lead:'0',ativo:'1',pausado:'2',inativo:'3'})[a.status||'ativo']||'1';
+  if(field==='proximo'){const nt=getAlunoTasksAll(a.id).filter(t=>!t.done).sort((x,y)=>liveDate(x).localeCompare(liveDate(y)))[0];return nt?liveDate(nt):'99999999';}
+  return (a[field]||'').toString().toLowerCase();
+}
+function getFilteredAlunos(){
   const today=todayStr();
   let list=DB.alunos.filter(a=>!a.archived);
-  const archivedList=DB.alunos.filter(a=>a.archived);
-
-  // Apply search
-  if(alunoSearch)list=list.filter(a=>a.nome.toLowerCase().includes(alunoSearch.toLowerCase())||(a.tel||'').includes(alunoSearch)||(a.email||'').toLowerCase().includes(alunoSearch.toLowerCase()));
-
-  // Apply column filters
+  if(alunoSearch)list=list.filter(a=>a.nome.toLowerCase().includes(alunoSearch.toLowerCase())||(a.apelido||'').toLowerCase().includes(alunoSearch.toLowerCase())||(a.tel||'').includes(alunoSearch)||(a.email||'').toLowerCase().includes(alunoSearch.toLowerCase()));
   if(alunoFilters.modId)list=list.filter(a=>a.modId===alunoFilters.modId);
   if(alunoFilters.fluxoId)list=list.filter(a=>(a.fluxos||[]).some(af=>af.id===alunoFilters.fluxoId));
   if(alunoFilters.status)list=list.filter(a=>(a.status||'ativo')===alunoFilters.status);
-
-  // Apply sort
+  if(alunoFilters.review)list=list.filter(a=>needsReview(a));
+  if(alunoFilters.prox)list=list.filter(a=>{const nt=getAlunoTasksAll(a.id).filter(t=>!t.done).sort((x,y)=>liveDate(x).localeCompare(liveDate(y)))[0];if(alunoFilters.prox==='none')return !nt;if(!nt)return false;const d=diffDays(liveDate(nt),today);return alunoFilters.prox==='late'?d<0:alunoFilters.prox==='today'?d===0:alunoFilters.prox==='future'?d>0:true;});
   const sortField=alunoSort.field||'nome';const sortDir=alunoSort.dir||'asc';
-  list.sort((a,b)=>{
-    let va=a[sortField]||'',vb=b[sortField]||'';
-    if(sortField==='proximo'){const nta=getAlunoTasksAll(a.id).filter(t=>!t.done).sort((x,y)=>liveDate(x).localeCompare(liveDate(y)))[0];va=nta?liveDate(nta):'9';const ntb=getAlunoTasksAll(b.id).filter(t=>!t.done).sort((x,y)=>liveDate(x).localeCompare(liveDate(y)))[0];vb=ntb?liveDate(ntb):'9';}
-    return sortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
-  });
+  list.sort((a,b)=>{const va=alunoSortVal(a,sortField),vb=alunoSortVal(b,sortField);return sortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);});
+  return list;
+}
+function alunoListAreaHTML(){
+  const sortField=alunoSort.field||'nome';const sortDir=alunoSort.dir||'asc';
+  const pop=DB.alunos.filter(a=>!a.archived);
+  const list=getFilteredAlunos();
+  // Filter options: only values actually used by clients
+  const usedModIds=new Set(pop.map(a=>a.modId).filter(Boolean));
+  const usedMods=[...usedModIds].map(id=>DB.modalidades.find(m=>m.id===id)).filter(Boolean).map(m=>({v:m.id,l:m.nome}));
+  const usedFluxoIds=new Set();pop.forEach(a=>(a.fluxos||[]).forEach(af=>usedFluxoIds.add(af.id)));
+  const usedFluxos=[...usedFluxoIds].map(id=>DB.fluxos.find(f=>f.id===id)).filter(Boolean).map(f=>({v:f.id,l:f.nome}));
+  const stLbls={lead:'🔵 Lead',ativo:'🟢 Ativo',pausado:'⏸ Pausado',inativo:'🔴 Inativo'};
+  const usedStatuses=['lead','ativo','pausado','inativo'].filter(s=>pop.some(a=>(a.status||'ativo')===s)).map(s=>({v:s,l:stLbls[s]}));
+  const proxOpts=[{v:'late',l:'⚠ Atrasada'},{v:'today',l:'📌 Hoje'},{v:'future',l:'Futura'},{v:'none',l:'Sem ação'}];
 
-  const totalAtivos=DB.alunos.filter(a=>!a.archived).length;
-  const filteredCount=list.length;
-  const isFiltered=filteredCount!==totalAtivos||!!alunoSearch;
+  const sortBtn=(field,label)=>{const active=sortField===field;const nextDir=active&&sortDir==='asc'?'desc':'asc';const arrow=active?(sortDir==='asc'?' ↑':' ↓'):'';return`<button class="btn btn-ghost btn-xs" style="${active?'font-weight:700;color:var(--green)':''}" onclick="alunoSort={field:'${field}',dir:'${nextDir}'};renderPage()">${label}${arrow}</button>`;};
+  const colFilter=(key,opts,placeholder)=>{const val=alunoFilters[key]||'';if(!opts.length)return'';return`<select style="font-size:12px;padding:2px 4px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--t1);max-width:130px" onchange="alunoFilters['${key}']=this.value;renderPage()"><option value="">${placeholder}</option>${opts.map(o=>`<option value="${o.v}"${val===o.v?' selected':''}>${o.l}</option>`).join('')}</select>`;};
 
-  const archived=archivedList.length;
+  const thead=`<thead><tr>
+    <th style="padding-left:18px"><div style="display:flex;align-items:center;gap:4px">${sortBtn('nome','Cliente')}</div></th>
+    <th><div style="display:flex;align-items:center;gap:4px">${sortBtn('modId','Modalidade')} ${colFilter('modId',usedMods,'Todas')}</div></th>
+    <th><div style="display:flex;align-items:center;gap:4px">${sortBtn('fluxo','Fluxos')} ${colFilter('fluxoId',usedFluxos,'Todos')}</div></th>
+    <th><div style="display:flex;align-items:center;gap:4px">${sortBtn('proximo','Próxima Ação')} ${colFilter('prox',proxOpts,'Todas')}</div></th>
+    <th><div style="display:flex;align-items:center;gap:4px">${sortBtn('status','Status')} ${colFilter('status',usedStatuses,'Todos')}</div></th>
+    <th style="width:80px"></th>
+  </tr></thead>`;
+  const anyFilter=Object.values(alunoFilters).some(Boolean)||!!alunoSearch;
+  const tbody=list.length
+    ?`<tbody>${list.map(al=>alunoRowHTML(al)).join('')}</tbody>`
+    :`<tbody><tr><td colspan="6"><div class="empty" style="padding:28px 20px"><div class="empty-icon">${pop.length?'🔍':'👥'}</div><p>${pop.length?'Nenhum cliente encontrado':'Nenhum cliente cadastrado ainda'}</p>${pop.length&&anyFilter?'<br><button class="btn btn-ghost btn-sm" onclick="clearAlunoFilters()">Limpar filtros</button>':''}</div></td></tr></tbody>`;
+
+  const archived=pop===null?0:DB.alunos.filter(a=>a.archived).length;
+  const archivedList=DB.alunos.filter(a=>a.archived);
   const archivedSection=archived>0?`
     <div style="margin-top:20px">
       <button class="btn btn-ghost btn-sm" onclick="showArchivedAlunos=!showArchivedAlunos;renderPage()" style="display:flex;align-items:center;gap:7px;color:var(--t3);font-size:13px">
@@ -2113,57 +2238,35 @@ function renderAlunos(){
           const afs=(al.fluxos||[]).map(af=>DB.fluxos.find(f=>f.id===af.id)).filter(Boolean);
           return`<tr style="opacity:.65"><td style="padding-left:18px"><div style="display:flex;align-items:center;gap:10px"><div class="cl-av" style="background:${al.cor||'#6b7280'}">${initials(al.nome)}</div><div><div class="cl-name">${h(al.nome)}</div><div class="cl-sub">${al.tel||''}</div></div></div></td><td>${mod?`<span class="cl-mod-pill">${mod.icon} ${h(mod.nome)}</span>`:'—'}</td><td>${afs.map(f=>`<span class="cl-fluxo-pill">${f.icon||'⚙️'} ${h(f.nome)}</span>`).join('')||'—'}</td><td onclick="event.stopPropagation()"><div style="display:flex;gap:5px;justify-content:flex-end;padding-right:8px"><button class="btn btn-ghost btn-xs" onclick="archiveAluno('${al.id}')">↩ Recuperar</button><button class="btn btn-danger btn-xs" onclick="deleteAlunoForever('${al.id}')">🗑 Excluir</button></div></td></tr>`;
         }).join('')}</tbody></table></div>`:''}
-    </div>`:''
+    </div>`:'';
 
-  // Build column filter dropdowns
-  const mods=DB.modalidades.filter(m=>!m.archived);
-  const fluxos=DB.fluxos.filter(f=>!f.archived);
-  const statuses=[{v:'ativo',l:'Ativo'},{v:'pausado',l:'Pausado'},{v:'inativo',l:'Inativo'}];
-
-  const sortBtn=(field,label)=>{
-    const active=sortField===field;
-    const nextDir=active&&sortDir==='asc'?'desc':'asc';
-    const arrow=active?(sortDir==='asc'?' ↑':' ↓'):'';
-    return`<button class="btn btn-ghost btn-xs" style="${active?'font-weight:700;color:var(--green)':''}" onclick="alunoSort={field:'${field}',dir:'${nextDir}'};renderPage()">${label}${arrow}</button>`;
-  };
-
-  const colFilter=(key,opts,placeholder)=>{
-    const val=alunoFilters[key]||'';
-    return`<select style="font-size:12px;padding:2px 4px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--t1);max-width:130px" onchange="alunoFilters['${key}']=this.value;renderPage()">
-      <option value="">${placeholder}</option>
-      ${opts.map(o=>`<option value="${o.v}"${val===o.v?' selected':''}>${o.l}</option>`).join('')}
-    </select>`;
-  };
-
-  const clearFilters=Object.values(alunoFilters).some(Boolean)||!!alunoSearch?`<button class="btn btn-ghost btn-xs" onclick="clearAlunoFilters()" style="color:var(--red)">✕ Limpar</button>`:'';
-
-  return`${clearFilters?`<div style="margin-bottom:6px">${clearFilters}</div>`:''}
+  return`<div class="card" style="padding:0;overflow:hidden"><table class="cl-table">${thead}${tbody}</table></div>${archivedSection}`;
+}
+function refreshAlunoList(){
+  const area=document.getElementById('aluno-list-area');if(area)area.innerHTML=alunoListAreaHTML();
+  const list=getFilteredAlunos();const total=DB.alunos.filter(a=>!a.archived).length;
+  const isF=list.length!==total||!!alunoSearch||Object.values(alunoFilters).some(Boolean);
+  const cb=document.getElementById('aluno-count-badge');if(cb){cb.textContent=list.length+' cliente'+(list.length!==1?'s':'');cb.style.background=isF?'var(--blue-lt)':'var(--surface2)';cb.style.color=isF?'var(--blue)':'var(--t3)';}
+  const cw=document.getElementById('aluno-clear-wrap');if(cw)cw.innerHTML=(Object.values(alunoFilters).some(Boolean)||alunoSearch)?`<button class="btn btn-ghost btn-xs" onclick="clearAlunoFilters()" style="color:var(--red)">✕ Limpar</button>`:'';
+}
+function renderAlunos(){
+  const list=getFilteredAlunos();const total=DB.alunos.filter(a=>!a.archived).length;
+  const isFiltered=list.length!==total||!!alunoSearch||Object.values(alunoFilters).some(Boolean);
+  const reviewCount=DB.alunos.filter(a=>needsReview(a)).length;
+  const reviewBanner=reviewCount>0?`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:10px;border-radius:10px;background:var(--yel-lt);border:1px solid #f0c14b">
+    <span style="font-size:16px">⏰</span>
+    <span style="font-size:13px;font-weight:600;color:#92500e;flex:1">${reviewCount} cliente${reviewCount>1?'s':''} pausado${reviewCount>1?'s':''}/inativo${reviewCount>1?'s':''} há +30 dias — reative ou arquive.</span>
+    <button class="btn btn-ghost btn-xs" onclick="alunoFilters={review:'1'};alunoSearch='';renderPage()" style="color:#92500e;font-weight:700">Revisar →</button>
+  </div>`:'';
+  const clearWrap=(Object.values(alunoFilters).some(Boolean)||alunoSearch)?`<button class="btn btn-ghost btn-xs" onclick="clearAlunoFilters()" style="color:var(--red)">✕ Limpar</button>`:'';
+  return`${reviewBanner}
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-    <div class="search-bar" style="flex:1;margin-bottom:0"><span class="icon">🔍</span><input type="text" placeholder="Buscar por nome, telefone ou email..." value="${h(alunoSearch)}" oninput="alunoSearch=this.value;renderPage()"></div>
-    <div style="font-size:13px;font-weight:700;padding:4px 10px;border-radius:20px;background:${isFiltered?'var(--blue-lt)':'var(--surface2)'};color:${isFiltered?'var(--blue)':'var(--t3)'};white-space:nowrap;flex-shrink:0">${filteredCount} cliente${filteredCount!==1?'s':''}</div>
+    <div class="search-bar" style="flex:1;margin-bottom:0"><span class="icon">🔍</span><input id="aluno-search-input" type="text" placeholder="Buscar por nome, telefone ou email..." value="${h(alunoSearch)}" oninput="alunoSearch=this.value;refreshAlunoList()"></div>
+    <span id="aluno-clear-wrap" style="flex-shrink:0">${clearWrap}</span>
+    <div id="aluno-count-badge" style="font-size:13px;font-weight:700;padding:4px 10px;border-radius:20px;background:${isFiltered?'var(--blue-lt)':'var(--surface2)'};color:${isFiltered?'var(--blue)':'var(--t3)'};white-space:nowrap;flex-shrink:0">${list.length} cliente${list.length!==1?'s':''}</div>
     <button class="btn btn-primary btn-sm" onclick="openModal('m-aluno');initAlunoForm()" style="flex-shrink:0">➕ Novo Cliente</button>
   </div>
-  ${list.length ? `<div class="card" style="padding:0;overflow:hidden">
-    <table class="cl-table">
-      <thead>
-        <tr>
-          <th style="padding-left:18px">
-            <div style="display:flex;align-items:center;gap:4px">${sortBtn('nome','Cliente')}</div>
-          </th>
-          <th><div style="display:flex;align-items:center;gap:4px">${sortBtn('modId','Modalidade')} ${colFilter('modId',mods.map(m=>({v:m.id,l:m.nome})),'Todas')}</div></th>
-          <th><div style="display:flex;align-items:center;gap:4px">Fluxos ${colFilter('fluxoId',fluxos.map(f=>({v:f.id,l:f.nome})),'Todos')}</div></th>
-          <th>${sortBtn('proximo','Próxima Ação')}</th>
-          <th><div style="display:flex;align-items:center;gap:4px">Status ${colFilter('status',statuses,'Todos')}</div></th>
-          <th style="width:80px"></th>
-        </tr>
-      </thead>
-      <tbody>${list.map(al=>alunoRowHTML(al)).join('')}</tbody>
-    </table>
-  </div>` : DB.alunos.filter(a=>!a.archived).length
-    ? '<div class="empty"><div class="empty-icon">🔍</div><p>Nenhum cliente encontrado</p><br><button class="btn btn-ghost" onclick="clearAlunoFilters()">Limpar filtros</button></div>'
-    : '<div class="empty"><div class="empty-icon">👥</div><p>Nenhum cliente cadastrado ainda</p></div>'
-  }
-  ${archivedSection}`;
+  <div id="aluno-list-area">${alunoListAreaHTML()}</div>`;
 }
 
 function alunoRowHTML(al){
@@ -2173,8 +2276,11 @@ function alunoRowHTML(al){
   const mod=DB.modalidades.find(m=>m.id===al.modId);
   const assignedFluxos=(al.fluxos||[]).map(af=>DB.fluxos.find(f=>f.id===af.id)).filter(Boolean);
   const status=al.status||'ativo';
-  const avBorderColor=status==='ativo'?'var(--green)':status==='pausado'?'var(--yellow)':'var(--red)';
-  const statusLbl=status==='ativo'?'<span style="color:var(--green-dk);font-size:13px;font-weight:600">● Ativo</span>':status==='pausado'?'<span style="color:#b45309;font-size:13px;font-weight:600">⏸ Pausado</span>':'<span style="color:var(--red);font-size:13px;font-weight:600">○ Inativo</span>';
+  const stMap={lead:['var(--blue)','🔵 Lead'],ativo:['var(--green-dk)','● Ativo'],pausado:['#b45309','⏸ Pausado'],inativo:['var(--red)','○ Inativo']};
+  const stEntry=stMap[status]||stMap.ativo;
+  const avBorderColor=status==='ativo'?'var(--green)':status==='lead'?'var(--blue)':status==='pausado'?'var(--yellow)':'var(--red)';
+  const reviewChip=needsReview(al)?` <span title="Inativo/pausado há +30 dias — revisar" style="font-size:11px;font-weight:700;padding:1px 6px;border-radius:20px;background:var(--yel-lt);color:#b45309">⏰ revisar</span>`:'';
+  const statusLbl=`<span style="color:${stEntry[0]};font-size:13px;font-weight:600">${stEntry[1]}</span>${reviewChip}`;
   const photoUrl=al.photoUrl||null;
 
   let nextHtml='<span style="font-size:13px;color:var(--t3)">—</span>';
@@ -2194,7 +2300,7 @@ function alunoRowHTML(al){
       <div style="display:flex;align-items:center;gap:10px">
         ${avHtml}
         <div>
-          <div class="cl-name">${h(al.nome)}</div>
+          <div class="cl-name">${h(al.nome)}${al.apelido?` <span style="font-weight:500;color:var(--t3);font-size:12px">(${h(al.apelido)})</span>`:''}</div>
           <div class="cl-sub">${al.tel||''}</div>
         </div>
       </div>
@@ -2217,7 +2323,7 @@ function initAlunoForm(al){
   editingAlunoId=al?al.id:null;
   _clearModalDirty('m-aluno');
   document.getElementById('m-aluno-ttl').textContent=al?'Editar Dados do Cliente':'Novo Cliente';
-  ['nome','tel','email','nasc','obs'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)el.value=al?al[k]||'':'';});
+  ['nome','tel','email','nasc','obs','apelido'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)el.value=al?al[k]||'':'';});
 }
 
 function saveAluno(){
@@ -2227,12 +2333,12 @@ function saveAluno(){
   if(editingAlunoId){
     const al=DB.alunos.find(a=>a.id===editingAlunoId);
     if(!al){toast('t-err','⚠ Cliente não encontrado');return;}
-    al.nome=nome;al.tel=tel;al.email=document.getElementById('f-email').value.trim();al.nasc=document.getElementById('f-nasc').value;al.obs=document.getElementById('f-obs').value.trim();
+    al.nome=nome;al.tel=tel;al.email=document.getElementById('f-email').value.trim();al.nasc=document.getElementById('f-nasc').value;al.obs=document.getElementById('f-obs').value.trim();al.apelido=document.getElementById('f-apelido').value.trim();
     addHistory(al.id,'aluno_edit','✏️ Dados atualizados','');
     toast('t-ok','✅ Cliente atualizado!');
     save();_clearModalDirty('m-aluno');closeModal('m-aluno');updateBadges();renderPage();
   } else {
-    const al={id:'a'+DB.alunoIdSeq++,nome,tel,email:document.getElementById('f-email').value.trim(),nasc:document.getElementById('f-nasc').value,obs:document.getElementById('f-obs').value.trim(),fluxos:[],cor:colors[DB.alunos.length%colors.length],status:'ativo'};
+    const al={id:'a'+DB.alunoIdSeq++,nome,tel,email:document.getElementById('f-email').value.trim(),nasc:document.getElementById('f-nasc').value,obs:document.getElementById('f-obs').value.trim(),apelido:document.getElementById('f-apelido').value.trim(),fluxos:[],cor:colors[DB.alunos.length%colors.length],status:'lead',statusSince:todayStr()};
     DB.alunos.push(al);
     save();_clearModalDirty('m-aluno');closeModal('m-aluno');updateBadges();
     toast('t-ok','✅ Cliente cadastrado! Configure os fluxos na tela do cliente.');
@@ -2288,7 +2394,7 @@ function renderAlunoPage(id){
   const total=allTasks.length;const done=doneTasks.length;
 
   /* ══ BOX 1: INFORMAÇÕES ══ */
-  const statusCfg={ativo:{color:'var(--green)',bg:'var(--green-lt)',lbl:'Ativo',icon:'🟢'},pausado:{color:'var(--yellow)',bg:'var(--yel-lt)',lbl:'Pausado',icon:'⏸'},inativo:{color:'var(--red)',bg:'var(--red-lt)',lbl:'Inativo',icon:'🔴'}};
+  const statusCfg={lead:{color:'var(--blue)',bg:'var(--blue-lt)',lbl:'Lead',icon:'🔵'},ativo:{color:'var(--green)',bg:'var(--green-lt)',lbl:'Ativo',icon:'🟢'},pausado:{color:'var(--yellow)',bg:'var(--yel-lt)',lbl:'Pausado',icon:'⏸'},inativo:{color:'var(--red)',bg:'var(--red-lt)',lbl:'Inativo',icon:'🔴'}};
   const st=al.status||'ativo';const sc=statusCfg[st]||statusCfg.ativo;
   const avBorderColor=st==='ativo'?'var(--green)':st==='pausado'?'var(--yellow)':'var(--red)';
   const urgBadge=urgentes>0?`<span style="font-size:13px;font-weight:700;color:var(--red)">🚨 ${urgentes} vencida${urgentes>1?'s':''}</span>`:done===total&&total>0?'<span style="font-size:13px;color:var(--green-dk);font-weight:600">✅ Tudo em dia</span>':'';
@@ -2317,7 +2423,7 @@ function renderAlunoPage(id){
         <input type="file" id="aluno-photo-input-${id}" accept="image/*" capture="environment" style="display:none" onchange="uploadAlunoPhoto(event,'${id}')">
       </div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:16px;font-weight:800;line-height:1.2;margin-bottom:5px">${h(al.nome)}</div>
+        <div style="font-size:16px;font-weight:800;line-height:1.2;margin-bottom:5px">${h(al.nome)}${al.apelido?` <span style="font-weight:600;color:var(--t3);font-size:12px">(${h(al.apelido)})</span>`:''}</div>
         ${statusBadgeHtml}
         ${urgBadge?`<div style="margin-top:6px">${urgBadge}</div>`:''}
       </div>
@@ -2646,6 +2752,7 @@ function toggleStatusDropdown(id,e){
 function closeStatusDropdown(id){const dd=document.getElementById('sdrop-'+id);if(dd)dd.style.display='none';}
 function setAlunoStatus(id,status){
   const al=DB.alunos.find(a=>a.id===id);if(!al)return;
+  if((al.status||'lead')!==status){al.statusSince=todayStr();const lbls={lead:'🔵 Lead',ativo:'🟢 Ativo',pausado:'⏸ Pausado',inativo:'🔴 Inativo'};addHistory(id,'status','Status: '+(lbls[status]||status),'');}
   al.status=status;save();navAluno(id);toast('t-ok','✅ Status atualizado!');
 }
 
@@ -2789,7 +2896,7 @@ function applyAlunoColor(id,color){
 }
 
 let _alunoTaskFilter='pending';
-function changeAlunoMod(id,modId){const al=DB.alunos.find(a=>a.id===id);if(!al)return;al.modId=modId;save();navAluno(id);toast('t-ok','✅ Modalidade atualizada');}
+function changeAlunoMod(id,modId){const al=DB.alunos.find(a=>a.id===id);if(!al)return;al.modId=modId;if(modId&&(al.status||'lead')==='lead'){al.status='ativo';al.statusSince=todayStr();addHistory(id,'status','🟢 Ativado','Vinculado a uma modalidade');}save();navAluno(id);toast('t-ok','✅ Modalidade atualizada');}
 
 function addFluxoToAluno(id){
   const sel=document.getElementById('add-fluxo-sel');const datEl=document.getElementById('add-fluxo-date');
@@ -2864,14 +2971,14 @@ function mergeTasks(tasks){
   // This groups duplicated steps across multiple flows assigned to the same client
   const groups={};
   tasks.forEach(t=>{
-    const key=(t.alunoId||'')+'|'+t.titulo.trim().toLowerCase()+'|'+t.cat+'|'+liveDate(t);
+    const key=(t.alunoId||'')+'|'+t.titulo.trim().toLowerCase()+'|'+t.cat+'|'+liveDate(t)+'|'+(t.hora||'');
     if(!groups[key])groups[key]=[];
     groups[key].push(t);
   });
   return Object.values(groups).map(grp=>{
     if(grp.length===1){const ld=liveDate(grp[0]);return{tasks:grp,merged:false,mergedCount:1,...grp[0],data:ld};}
     const base=grp[0];
-    return{tasks:grp,merged:true,mergedCount:grp.length,titulo:base.titulo,cat:base.cat,data:liveDate(base),tipo:base.tipo,
+    return{tasks:grp,merged:true,mergedCount:grp.length,titulo:base.titulo,cat:base.cat,data:liveDate(base),tipo:base.tipo,hora:base.hora,
       alunoId:base.alunoId,done:grp.every(t=>t.done),id:grp.map(t=>t.id).join(',')};
   });
 }
@@ -2879,8 +2986,8 @@ function mergeTasks(tasks){
 function mergeAgendaTasks(tasks){
   const groups={};
   tasks.forEach(t=>{
-    // Merge only within the same client: key = alunoId + titulo + cat + date
-    const key=(t.alunoId||'__none__')+'|'+t.titulo.trim().toLowerCase()+'|'+t.cat+'|'+liveDate(t);
+    // Merge only within the same client: key = alunoId + titulo + cat + date + hora
+    const key=(t.alunoId||'__none__')+'|'+t.titulo.trim().toLowerCase()+'|'+t.cat+'|'+liveDate(t)+'|'+(t.hora||'');
     if(!groups[key])groups[key]=[];
     groups[key].push(t);
   });
@@ -2890,7 +2997,7 @@ function mergeAgendaTasks(tasks){
     const allDone=grp.every(t=>t.done);
     return{
       tasks:grp,merged:true,mergedCount:grp.length,
-      titulo:base.titulo,cat:base.cat,data:liveDate(base),tipo:base.tipo,
+      titulo:base.titulo,cat:base.cat,data:liveDate(base),tipo:base.tipo,hora:base.hora,
       alunoId:base.alunoId,done:allDone,
       id:grp.map(t=>t.id).join(',')
     };
@@ -2906,6 +3013,54 @@ function toggleMergedTask(ids,isDoneOrAlunoId,alunoId){
   if(currentPage==='aluno_detail'&&currentAlunoId)navAluno(resolvedAlunoId||currentAlunoId);
   else renderPage();
 }
+
+// ─── Reschedule any task (cascades to dependent steps) ───────────────────────
+function rescheduleTask(id,newDate,newHora){
+  const t=DB.tasks.find(x=>x.id===id);if(!t)return;
+  t.hora=newHora||'';
+  if(t.manual){t.data=newDate;}
+  else if(t.isTrigger){
+    const al=DB.alunos.find(a=>a.id===t.alunoId);
+    const af=al&&(al.fluxos||[]).find(af=>af.tasks&&af.tasks.includes(id));
+    if(af)af.triggerDate=newDate;
+    t.data=newDate;
+  } else {
+    t.over=newDate; // override; children recompute from this date via computeChainDate
+  }
+}
+let _reschedIds=[];
+function openReschedule(ids){
+  _reschedIds=String(ids).split(',').filter(Boolean);
+  const t=DB.tasks.find(x=>x.id===_reschedIds[0]);if(!t)return;
+  document.getElementById('resched-data').value=liveDate(t);
+  document.getElementById('resched-hora').value=t.hora||'';
+  const al=DB.alunos.find(a=>a.id===t.alunoId);
+  document.getElementById('resched-sub').textContent=h(t.titulo)+(al?' — '+h(displayName(al)):'');
+  document.getElementById('resched-cat').value=t.cat; // hidden carrier for duration preview
+  updateReschedEnd();
+  openModal('m-resched');
+}
+function updateReschedEnd(){
+  const cat=document.getElementById('resched-cat').value;
+  const dur=catDuracao(cat);const hora=document.getElementById('resched-hora').value;
+  const end=document.getElementById('resched-end');
+  if(end)end.textContent=(dur>0&&hora)?`⏱ Término: ${addMinHHMM(hora,dur)} (${dur} min)`:(hora?'':'Sem horário = dia todo');
+}
+function saveReschedule(){
+  const newDate=document.getElementById('resched-data').value;
+  if(!newDate){toast('t-err','⚠ Informe a data');return;}
+  const newHora=document.getElementById('resched-hora').value;
+  const first=DB.tasks.find(x=>x.id===_reschedIds[0]);
+  const dur=first?catDuracao(first.cat):0;
+  if(dur>0&&!newHora){toast('t-err','⚠ Esta categoria exige horário');return;}
+  let alId=null;
+  _reschedIds.forEach(id=>{const t=DB.tasks.find(x=>x.id===id);if(t)alId=t.alunoId;rescheduleTask(id,newDate,newHora);});
+  if(alId)addHistory(alId,'task_edit','📅 Reagendado'+(first?': '+first.titulo:''),fmtDate(newDate)+(newHora?' '+newHora:''));
+  save();closeModal('m-resched');updateBadges();
+  if(currentPage==='aluno_detail'&&currentAlunoId)navAluno(currentAlunoId);else renderPage();
+  toast('t-ok','✅ Reagendado!');
+}
+
 
 // ─── Shared card style resolver ──────────────────────────────────────────────
 function getTaskCardStyle(t){
@@ -2967,7 +3122,7 @@ function buildPipeCard(m, ctx, al, actionDone, actionUndo){
 
   // Client name (global/dash only)
   const clientLine=(ctx!=='aluno')
-    ?`<div class="pt-client-name" style="cursor:pointer" onclick="navAluno('${alunoId}')">${h(al.nome)}</div>`:'';
+    ?`<div class="pt-client-name" style="cursor:pointer" onclick="navAluno('${alunoId}')">${h(displayName(al))}</div>`:'';
 
   // Modalidade (not dash) — "Entrada Manual" for manual tasks
   const modLine=(ctx!=='dash')
@@ -3006,6 +3161,8 @@ function buildPipeCard(m, ctx, al, actionDone, actionUndo){
     actionBtn=`<button class="pt-btn ${btnCls}" style="${btnH}" onclick="${actionDone}">${t0.tipo==='prazo'?'✓':'👁'}${isCompact?'':' '+btnLabel}</button>`;
   }
   const waBtn=`<button class="pt-btn wa" style="${btnH}" onclick="openWA('${alunoId}','${waKey}')" title="WhatsApp">💬</button>`;
+  const reschedBtn=(!allDone&&!blocked)?`<button class="pt-btn" style="${btnH}" onclick="event.stopPropagation();openReschedule('${ids}')" title="Reagendar data/horário">📅</button>`:'';
+  const horaLbl=taskTimeLabel(t0);const horaTag=horaLbl?`<span class="tag tag-hora" style="margin-left:4px">🕐 ${horaLbl}</span>`:'';
 
   // Date info
   const doneDateStr=fmtDate(t0.doneDate||liveDate(t0));
@@ -3022,8 +3179,8 @@ function buildPipeCard(m, ctx, al, actionDone, actionUndo){
     // Row 2: [Venc. em Xd]  [✏️ Editar][🗑 Excluir]  (smaller)
     bottomRow=`<div onclick="event.stopPropagation()">
       <div class="pt-bottom-row">
-        <div class="pt-date-block">${dateBadgeSpan}</div>
-        <div class="pt-actions-inline">${actionBtn}${waBtn}</div>
+        <div class="pt-date-block">${dateBadgeSpan}${horaTag}</div>
+        <div class="pt-actions-inline">${reschedBtn}${actionBtn}${waBtn}</div>
       </div>
       <div class="pt-bottom-row" style="margin-top:4px">
         <div class="pt-date-block">${daysLabelSpan}</div>
@@ -3037,8 +3194,8 @@ function buildPipeCard(m, ctx, al, actionDone, actionUndo){
     // Regular card: [date badge · Venc. em Xd]   [Visto][💬] — single row, no gap
     bottomRow=`<div onclick="event.stopPropagation()">
       <div class="pt-bottom-row">
-        <div class="pt-date-block">${dateBadgeSpan}${daysLabelSpan?`<span style="display:inline-block;margin-left:4px">${daysLabelSpan}</span>`:''}</div>
-        <div class="pt-actions-inline">${actionBtn}${waBtn}</div>
+        <div class="pt-date-block">${dateBadgeSpan}${horaTag}${daysLabelSpan?`<span style="display:inline-block;margin-left:4px">${daysLabelSpan}</span>`:''}</div>
+        <div class="pt-actions-inline">${reschedBtn}${actionBtn}${waBtn}</div>
       </div>
     </div>`;
   }
@@ -3067,7 +3224,7 @@ function togglePipeColSort(cat,e){e&&e.stopPropagation();const f=getPipeColFilte
 
 function renderPipeline(){
   const today=todayStr();const catDefs=getCatDefs();
-  const pausedIds=new Set(DB.alunos.filter(a=>a.status==='pausado'||a.status==='inativo').map(a=>a.id));
+  const pausedIds=new Set(DB.alunos.filter(a=>a.archived||a.status==='pausado'||a.status==='inativo').map(a=>a.id));
   const allVisible=DB.tasks.filter(t=>!pausedIds.has(t.alunoId)&&(!t.done||(t.done&&t.doneDate===today)));
   // Default order = catDefs order; DB.pipeOrder overrides if set
   const defaultOrder=catDefs.map(c=>c.id);
@@ -3125,7 +3282,7 @@ function renderCalGrid(){
   if(lbl)lbl.textContent=new Date(calYear,calMonth,1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'}).replace(/^\w/,c=>c.toUpperCase());
   grid.querySelectorAll('.cal-day').forEach(e=>e.remove());
   const today=todayStr();const firstDay=new Date(calYear,calMonth,1).getDay();const dim=new Date(calYear,calMonth+1,0).getDate();const prev=new Date(calYear,calMonth,0).getDate();
-  const taskMap={};DB.tasks.forEach(t=>{const d=liveDate(t);if(!taskMap[d])taskMap[d]=[];taskMap[d].push(t);});
+  const taskMap={};DB.tasks.forEach(t=>{if(!taskVisible(t))return;const d=liveDate(t);if(!taskMap[d])taskMap[d]=[];taskMap[d].push(t);});
   for(let i=0;i<firstDay;i++){const el=document.createElement('div');el.className='cal-day d-other';el.innerHTML=`<div class="cal-day-num">${prev-firstDay+1+i}</div>`;grid.appendChild(el);}
   for(let i=1;i<=dim;i++){
     const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
@@ -3205,7 +3362,7 @@ function renderSetupCategorias(){
     </div>
     <span style="font-size:20px;flex-shrink:0">${cat.icon}</span>
     <div style="width:14px;height:14px;border-radius:50%;background:${cat.color};flex-shrink:0;border:2px solid rgba(0,0,0,.12)"></div>
-    <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">${h(cat.label)}</div>${cat.urgDays>0?`<div style="font-size:12px;color:var(--blue);margin-top:1px">⚡ ${cat.urgDays}d de antecedência</div>`:''}</div>
+    <div style="flex:1;display:flex;align-items:center;gap:10px;min-width:0;overflow:hidden"><span style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:1">${h(cat.label)}</span><div style="display:flex;gap:5px;align-items:center;flex-shrink:0">${cat.urgDays>0?`<span class="cfg-meta-chip" style="background:var(--blue-lt);color:var(--blue)">⚡ ${cat.urgDays}d antecedência</span>`:''}${cat.duracao>0?`<span class="cfg-meta-chip" style="background:var(--green-lt);color:var(--green-dk)">🕐 ${cat.duracao} min</span>`:''}</div></div>
     <button class="btn btn-ghost btn-sm" onclick="editCat('${cat.id}')">✏️ Editar</button>
     <button class="btn btn-danger btn-sm" data-catid="${cat.id}" onclick="deleteCatSafe(this.dataset.catid,getCatDefs().find(c=>c.id===this.dataset.catid)?.label||'')" title="Arquivar">📦</button>
   </div>`).join('');
@@ -3255,12 +3412,6 @@ function renderFluxos(){
       ?`<button class="btn btn-ghost btn-sm" onclick="restoreFluxo('${f.id}')">♻️ Restaurar</button><button class="btn btn-danger btn-sm" onclick="deleteFluxoPermanent('${f.id}')">🗑 Excluir</button>`
       :`<button class="btn btn-ghost btn-sm" onclick="editFluxo('${f.id}')">✏️ Editar</button><button class="btn btn-ghost btn-sm" onclick="dupFluxo('${f.id}')">📋 Duplicar</button><button class="btn btn-danger btn-sm" onclick="delFluxo('${f.id}')">📦 Arquivar</button>`;
 
-    const moveButtons=!isArq?`<div style="display:flex;flex-direction:column;gap:3px;align-self:center;flex-shrink:0;margin-right:4px">
-      <button class="btn btn-ghost btn-xs" onclick="moveFluxo('${f.id}',-1)" ${aIdx===0?'disabled':''} title="Mover para cima" style="padding:0 6px;min-width:0;height:22px;font-size:12px">↑</button>
-      <button class="btn btn-ghost btn-xs" onclick="moveFluxo('${f.id}',1)" ${aIdx===ativosAll.length-1?'disabled':''} title="Mover para baixo" style="padding:0 6px;min-width:0;height:22px;font-size:12px">↓</button>
-    </div>`:'';
-
-    // Step nodes — per-line layout
     const makeNode=(icon,name,daysLine,catName,tipo,isGatilho,isInvalid)=>{
       const border=isGatilho?'border-color:var(--green)':isInvalid?'border-color:var(--red);background:var(--red-lt)':'';
       const bg=isGatilho?'background:var(--green-lt)':'';
@@ -3272,7 +3423,6 @@ function renderFluxos(){
         <div class="fvis-type ${isGatilho?'trigger':tipo}" style="margin-top:4px">${isGatilho?'Gatilho':tipo==='prazo'?'⏰ Prazo':'📌 Notif'}</div>
       </div></div>`;
     };
-
     const nodes=[makeNode('🎯',f.trigger,'Ponto de partida',f.trigger,'trigger',true,false),...f.steps.map(s=>{
       const cat=getCatDefs().find(x=>x.id===s.cat);
       const stepLabel=s.nome||(cat?cat.label:'Etapa');
@@ -3281,14 +3431,27 @@ function renderFluxos(){
       return`<div class="fvis-arrow">→</div>`+makeNode(cat?.icon||'📋',stepLabel,`${s.dias}d após ${String(ref).slice(0,18)}`,cat?.label||'',s.tipo,false,isInvalid);
     })].join('');
 
-    return`<div class="card" style="margin-bottom:10px${isArq?';opacity:.72;border-style:dashed':''}">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap">
-        <span style="font-size:20px;flex-shrink:0">${f.icon||'⚙️'}</span>
-        <span style="font-size:15px;font-weight:800;white-space:nowrap">${h(f.nome)}</span>
-        <div style="display:flex;align-items:center;gap:4px;flex:1;flex-wrap:wrap">${headerChips}</div>
-        <div style="display:flex;gap:5px;flex-shrink:0">${btns}</div>
+    const aHandle=isArq?'':`<div class="cat-drag-handle" title="Arrastar"><span class="dh-dot"></span><span class="dh-dot"></span><span class="dh-dot"></span><span class="dh-dot"></span><span class="dh-dot"></span><span class="dh-dot"></span></div>
+      <div style="display:flex;flex-direction:column;gap:1px;flex-shrink:0">
+        <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();moveFluxo('${f.id}',-1)" ${aIdx===0?'disabled':''} title="Mover para cima" style="padding:0 4px;min-width:0;height:18px;font-size:11px;line-height:1">↑</button>
+        <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();moveFluxo('${f.id}',1)" ${aIdx===ativosAll.length-1?'disabled':''} title="Mover para baixo" style="padding:0 4px;min-width:0;height:18px;font-size:11px;line-height:1">↓</button>
+      </div>`;
+    const open=window._openFluxoId===f.id;
+    const dragAttrs=isArq?'':`draggable="true" ondragstart="rowDragStart(event,'${f.id}','fluxo')" ondragover="rowDragOver(event)" ondragenter="rowDragEnter(event)" ondragleave="rowDragLeave(event)" ondrop="rowDrop(event,'${f.id}','fluxo')" ondragend="rowDragEnd(event)"`;
+    return`<div class="cfg-cat-row row-drag flow-acc" data-rowkind="fluxo" data-rowid="${f.id}" data-fid="${f.id}" ${dragAttrs} style="flex-direction:column;align-items:stretch;gap:0;padding:0;margin-bottom:8px${isArq?';opacity:.72;border-style:dashed':''}">
+      <div style="display:flex;align-items:center;gap:9px;padding:9px 11px">
+        ${aHandle}
+        <div onclick="toggleFluxoAccordion('${f.id}')" style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;cursor:pointer">
+          <span class="flow-acc-chev">${open?'▾':'▸'}</span>
+          <span style="font-size:20px;flex-shrink:0">${f.icon||'⚙️'}</span>
+          <span style="font-size:15px;font-weight:800;white-space:nowrap">${h(f.nome)}</span>
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;overflow:hidden">${headerChips}</div>
+        </div>
+        <div style="display:flex;gap:5px;flex-shrink:0" onclick="event.stopPropagation()">${btns}</div>
       </div>
-      <div class="fvis" style="margin-top:12px">${moveButtons}${nodes}</div>
+      <div class="flow-acc-body" style="display:${open?'block':'none'};border-top:1px solid var(--border);padding:2px 11px 8px">
+        <div class="fvis">${nodes}</div>
+      </div>
     </div>`;
   };
 
@@ -3562,39 +3725,46 @@ function renderModalidades(){
   const arquivadas=DB.modalidades.filter(m=>m.archived);
   if(!ativas.length&&!arquivadas.length)return`<div class="empty"><div class="empty-icon">🏋️</div><p>Nenhuma modalidade criada</p></div>`;
 
-  const modCard=(m,isArq)=>{
+  const modRow=(m,isArq)=>{
     const mc=modCardColor(m);
-    // All linked fluxos
     const allFluxos=(m.fluxos&&m.fluxos.length?m.fluxos:[m.fluxoId?{id:m.fluxoId,fav:true}:null]).filter(Boolean).filter(x=>x.id);
-    const fluxoLines=allFluxos.map(mf=>{
-      const fl=DB.fluxos.find(f=>f.id===mf.id);if(!fl)return'';
-      return`<div style="display:flex;align-items:center;gap:5px;margin-top:3px"><span style="font-size:13px">${fl.icon||'⚙️'}</span><span style="font-size:13px;color:var(--t2);font-weight:${mf.fav?700:400}">${h(fl.nome)}${mf.fav?' <span style="color:var(--green);font-size:12px">★</span>':''}</span></div>`;
-    }).join('');
+    const fluxoChips=allFluxos.map(mf=>{const fl=DB.fluxos.find(f=>f.id===mf.id);if(!fl)return'';return`<span class="cfg-meta-chip">${fl.icon||'⚙️'} ${h(fl.nome)}${mf.fav?' <span style="color:var(--green)">★</span>':''}</span>`;}).join('');
+    const idx=ativas.findIndex(x=>x.id===m.id);
     const btns=isArq
-      ?`<button class="btn btn-ghost btn-xs" onclick="restoreMod('${m.id}')">♻️ Restaurar</button><button class="btn btn-danger btn-xs" onclick="deleteModPermanent('${m.id}')">🗑 Excluir</button>`
-      :`<button class="btn btn-ghost btn-xs" onclick="editMod('${m.id}')">✏️ Editar</button><button class="btn btn-warn btn-xs" onclick="archiveMod('${m.id}')">📦 Arquivar</button>`;
-    return`<div class="stat-card" style="display:flex;flex-direction:column;${isArq?'opacity:.72;border-style:dashed':''}">
-      <div class="stat-accent" style="background:${mc}"></div>
-      <div style="font-size:28px;margin-bottom:6px">${m.icon}</div>
-      <div style="font-size:15px;font-weight:800;line-height:1.2;margin-bottom:${m.desc?3:6}px">${h(m.nome)}</div>
-      ${m.desc?`<div style="font-size:13px;color:var(--t2);margin-bottom:6px;line-height:1.4">${h(m.desc)}</div>`:''}
-      <div style="flex:1;border-top:1px solid var(--border);padding-top:7px;margin-top:2px">
-        ${allFluxos.length?fluxoLines:`<span style="font-size:13px;color:var(--t3)">Sem fluxo vinculado</span>`}
+      ?`<button class="btn btn-ghost btn-sm" onclick="restoreMod('${m.id}')">♻️ Restaurar</button><button class="btn btn-danger btn-sm" onclick="deleteModPermanent('${m.id}')">🗑 Excluir</button>`
+      :`<button class="btn btn-ghost btn-sm" onclick="editMod('${m.id}')">✏️ Editar</button><button class="btn btn-warn btn-sm" onclick="archiveMod('${m.id}')">📦 Arquivar</button>`;
+    const handle=isArq?'':`<div class="cat-drag-handle" title="Arrastar"><span class="dh-dot"></span><span class="dh-dot"></span><span class="dh-dot"></span><span class="dh-dot"></span><span class="dh-dot"></span><span class="dh-dot"></span></div>
+      <div style="display:flex;flex-direction:column;gap:1px;flex-shrink:0">
+        <button class="btn btn-ghost btn-xs" onclick="moveMod('${m.id}',-1)" ${idx===0?'disabled':''} title="Mover para cima" style="padding:0 4px;min-width:0;height:18px;font-size:11px;line-height:1">↑</button>
+        <button class="btn btn-ghost btn-xs" onclick="moveMod('${m.id}',1)" ${idx===ativas.length-1?'disabled':''} title="Mover para baixo" style="padding:0 4px;min-width:0;height:18px;font-size:11px;line-height:1">↓</button>
+      </div>`;
+    const dragAttrs=isArq?'':`draggable="true" ondragstart="rowDragStart(event,'${m.id}','mod')" ondragover="rowDragOver(event)" ondragenter="rowDragEnter(event)" ondragleave="rowDragLeave(event)" ondrop="rowDrop(event,'${m.id}','mod')" ondragend="rowDragEnd(event)"`;
+    return`<div class="cfg-cat-row row-drag" data-rowkind="mod" data-rowid="${m.id}" ${dragAttrs} style="${isArq?'opacity:.72;border-style:dashed':''}">
+      ${handle}
+      <span style="font-size:20px;flex-shrink:0">${m.icon}</span>
+      <div style="width:14px;height:14px;border-radius:50%;background:${mc};flex-shrink:0;border:2px solid rgba(0,0,0,.12)"></div>
+      <div style="flex:1;display:flex;align-items:center;gap:10px;min-width:0;overflow:hidden">
+        <span style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;max-width:220px">${h(m.nome)}</span>
+        ${m.desc?`<span style="font-size:12px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:1;max-width:240px">${h(m.desc)}</span>`:''}
+        <div style="display:flex;gap:5px;align-items:center;overflow:hidden;flex-shrink:1">${allFluxos.length?fluxoChips:`<span style="font-size:12px;color:var(--t3);white-space:nowrap">Sem fluxo vinculado</span>`}</div>
       </div>
-      <div style="display:flex;gap:4px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);flex-wrap:wrap">${btns}</div>
+      <div style="display:flex;gap:5px;flex-shrink:0">${btns}</div>
     </div>`;
   };
 
-  const ativasGrid=ativas.length
-    ?`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px">${ativas.map(m=>modCard(m,false)).join('')}</div>`
-    :'';
-
-  const arqSection=arquivadas.length?`<div style="margin-top:4px;border-top:1px solid var(--border);padding-top:12px">
-    <button class="btn btn-ghost btn-sm" id="btn-arq-mod-toggle" onclick="toggleArqMods()" style="width:100%;justify-content:center;margin-bottom:10px">📦 ${arquivadas.length} modalidade${arquivadas.length!==1?'s':''} arquivada${arquivadas.length!==1?'s':''} — ver</button>
-    <div id="arq-mods-list" style="display:none"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">${arquivadas.map(m=>modCard(m,true)).join('')}</div></div>
+  const ativasList=ativas.length?ativas.map(m=>modRow(m,false)).join(''):'<div class="empty" style="padding:24px 0"><div class="empty-icon">🏋️</div><p>Nenhuma modalidade. Crie a primeira!</p></div>';
+  const arqSection=arquivadas.length?`<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+    <button class="btn btn-ghost btn-sm" id="btn-arq-mod-toggle" onclick="toggleArqMods()" style="width:100%;justify-content:center;margin-bottom:8px">📦 ${arquivadas.length} modalidade${arquivadas.length!==1?'s':''} arquivada${arquivadas.length!==1?'s':''} — ver</button>
+    <div id="arq-mods-list" style="display:none">${arquivadas.map(m=>modRow(m,true)).join('')}</div>
   </div>`:'';
 
-  return`<div>${ativasGrid}${arqSection}</div>`;
+  return`<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div><div style="font-size:15px;font-weight:800">🏋️ Modalidades</div><div style="font-size:13px;color:var(--t2);margin-top:2px">${ativas.length} ativa${ativas.length!==1?'s':''}. Arraste ⠿ para reordenar.</div></div>
+    </div>
+    ${ativasList}
+    ${arqSection}
+  </div>`;
 }
 
 function renderModFluxosList(){
@@ -4358,6 +4528,7 @@ function initCatForm(id){
   document.getElementById('m-cat-ttl').textContent=cat?'Editar Categoria':'Nova Categoria';
   document.getElementById('cat-label').value=cat?cat.label:'';document.getElementById('cat-id').value=cat?cat.id:'';
   const urgEl=document.getElementById('cat-urgdays');if(urgEl)urgEl.value=cat&&cat.urgDays>0?cat.urgDays:'';
+  const durEl=document.getElementById('cat-duracao');if(durEl)durEl.value=cat&&cat.duracao>0?cat.duracao:'';
   setPickerVal('cat-icon-val','cat-icon-preview',cat?cat.icon:'📋');
   setTimeout(()=>initCatColorPicker(cat?cat.color:'#8b5cf6'),60);
 }
@@ -4398,7 +4569,8 @@ function saveCat(){
   const label=document.getElementById('cat-label').value.trim();const icon=document.getElementById('cat-icon-val').value||'📋';const color=document.getElementById('cat-color').value||'#3b82f6';
   if(!label){toast('t-err','⚠ Preencha o nome');return;}
   const urgDaysVal=parseInt(document.getElementById('cat-urgdays')?.value||'',10);
-  const catData={label,icon,color,...(urgDaysVal>0?{urgDays:urgDaysVal}:{urgDays:0})};
+  const durVal=parseInt(document.getElementById('cat-duracao')?.value||'',10);
+  const catData={label,icon,color,...(urgDaysVal>0?{urgDays:urgDaysVal}:{urgDays:0}),duracao:(durVal>0?durVal:0)};
   if(!DB.customCats)DB.customCats=[];
   if(editCatId){const c=DB.customCats.find(x=>x.id===editCatId);if(c)Object.assign(c,catData);else DB.customCats.push({id:editCatId,...catData});}
   else{DB.customCats.push({id:'cat_'+Date.now(),...catData});}
@@ -4407,6 +4579,7 @@ function saveCat(){
   if(_openedCatFromFluxo){_openedCatFromFluxo=false;openModal('m-fluxo');setTimeout(()=>{const catDefs=getCatDefs();const tc=document.getElementById('fl-trigger-cat');if(tc){tc.innerHTML=catDefs.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('')+'<option value="__newcat__">➕ Nova categoria...</option>';}renderStepsList();updateFlowPreview();},80);}
 }
 let _dragSrcId=null;
+let _dragKind=null;
 function catDragStart(e,id){_dragSrcId=id;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);setTimeout(()=>{const el=document.querySelector(`.cfg-cat-row[data-catid="${id}"]`);if(el)el.classList.add('dragging');},0);}
 function catDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
 function catDragEnter(e){e.preventDefault();const row=e.currentTarget;if(row.dataset.catid!==_dragSrcId)row.classList.add('drag-over');}
@@ -4414,6 +4587,15 @@ function catDragLeave(e){const row=e.currentTarget;if(!row.contains(e.relatedTar
 function catDrop(e,targetId){e.preventDefault();const row=e.currentTarget;row.classList.remove('drag-over');if(!_dragSrcId||_dragSrcId===targetId)return;if(!DB.customCats)return;const si=DB.customCats.findIndex(c=>c.id===_dragSrcId);const ti=DB.customCats.findIndex(c=>c.id===targetId);if(si<0||ti<0)return;const[moved]=DB.customCats.splice(si,1);const ins=DB.customCats.findIndex(c=>c.id===targetId);DB.customCats.splice(ins,0,moved);save();renderPage();}
 function catDragEnd(){document.querySelectorAll('.cfg-cat-row').forEach(r=>r.classList.remove('dragging','drag-over'));_dragSrcId=null;}
 function moveCat(id,dir){if(!DB.customCats)return;const i=DB.customCats.findIndex(c=>c.id===id);if(i<0)return;const j=i+dir;if(j<0||j>=DB.customCats.length)return;[DB.customCats[i],DB.customCats[j]]=[DB.customCats[j],DB.customCats[i]];save();renderPage();}
+// ─── Generic row drag-reorder (fluxos + modalidades) ─────────────────────────
+function rowDragStart(e,id,kind){_dragSrcId=id;_dragKind=kind;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',id);setTimeout(()=>{const el=document.querySelector(`[data-rowkind="${kind}"][data-rowid="${id}"]`);if(el)el.classList.add('dragging');},0);}
+function rowDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
+function rowDragEnter(e){e.preventDefault();const row=e.currentTarget;if(row.dataset.rowid!==_dragSrcId)row.classList.add('drag-over');}
+function rowDragLeave(e){const row=e.currentTarget;if(!row.contains(e.relatedTarget))row.classList.remove('drag-over');}
+function rowDragEnd(){document.querySelectorAll('.row-drag').forEach(r=>r.classList.remove('dragging','drag-over'));_dragSrcId=null;_dragKind=null;}
+function rowDrop(e,targetId,kind){e.preventDefault();e.currentTarget.classList.remove('drag-over');if(!_dragSrcId||_dragSrcId===targetId||_dragKind!==kind)return;const arr=kind==='fluxo'?DB.fluxos:kind==='mod'?DB.modalidades:null;if(!arr)return;const si=arr.findIndex(x=>x.id===_dragSrcId);if(si<0)return;const[moved]=arr.splice(si,1);const ins=arr.findIndex(x=>x.id===targetId);if(ins<0){arr.splice(si,0,moved);return;}arr.splice(ins,0,moved);save();renderPage();}
+function moveMod(id,dir){const ativas=DB.modalidades.filter(m=>!m.archived);const ai=ativas.findIndex(m=>m.id===id);const tgt=ativas[ai+dir];if(!tgt)return;const i=DB.modalidades.findIndex(m=>m.id===id);const j=DB.modalidades.findIndex(m=>m.id===tgt.id);[DB.modalidades[i],DB.modalidades[j]]=[DB.modalidades[j],DB.modalidades[i]];save();renderPage();}
+function toggleFluxoAccordion(id){const willOpen=window._openFluxoId!==id;window._openFluxoId=willOpen?id:null;document.querySelectorAll('.flow-acc').forEach(card=>{const open=(card.dataset.fid===id&&willOpen);const body=card.querySelector('.flow-acc-body');const chev=card.querySelector('.flow-acc-chev');if(body)body.style.display=open?'block':'none';if(chev)chev.textContent=open?'▾':'▸';});}
 /* ═══════════════════════════════
    BACKUP & DATA
 ═══════════════════════════════ */
