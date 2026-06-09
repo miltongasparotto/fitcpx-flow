@@ -5,6 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FitCPX Flow V6.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+/* ── LOGIN SCREEN ── */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
+#login-screen.hidden{display:none;}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:360px;box-shadow:var(--shadow-md);text-align:center;}
+.login-logo{width:52px;height:52px;background:var(--green);border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px;}
+.login-title{font-size:22px;font-weight:800;letter-spacing:-.4px;margin-bottom:4px;}
+.login-title span{color:var(--green);}
+.login-sub{font-size:14px;color:var(--t2);margin-bottom:28px;}
+.login-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 20px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--t1);font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;}
+.login-btn:hover{background:var(--surface2);border-color:var(--border2);box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.login-btn svg{width:20px;height:20px;flex-shrink:0;}
+.login-footer{font-size:12px;color:var(--t3);margin-top:20px;}
+/* ── SYNC INDICATOR ── */
+#sync-indicator{position:fixed;bottom:16px;right:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow);z-index:1000;transition:opacity .3s;opacity:0;pointer-events:none;}
+#sync-indicator.visible{opacity:1;pointer-events:auto;}
+#sync-indicator.syncing{color:var(--blue);}
+#sync-indicator.ok{color:var(--green);}
+#sync-indicator.err{color:var(--red);}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.syncing .sync-dot{animation:pulse-dot .8s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.3;}}
+/* ── USER AVATAR in sidebar ── */
+#sb-user-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;}
+</style>
 <style>
 [data-theme="light"]{--bg:#f4f6f9;--surface:#fff;--surface2:#f0f2f5;--surface3:#e8eaed;--border:#e0e3e8;--border2:#cdd0d8;--t1:#111827;--t2:#4b5563;--t3:#9ca3af;--shadow:0 1px 4px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);--shadow-md:0 4px 20px rgba(0,0,0,.10);}
 [data-theme="dark"]{--bg:#0d1117;--surface:#161b24;--surface2:#1c2232;--surface3:#232d40;--border:#2a3347;--border2:#3a4560;--t1:#e8edf5;--t2:#8a96b0;--t3:#4a5570;--shadow:0 1px 4px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.2);--shadow-md:0 4px 20px rgba(0,0,0,.4);}
@@ -686,6 +712,22 @@ textarea{resize:vertical;min-height:80px;}
 </style>
 </head>
 <body>
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">⚡</div>
+    <div class="login-title">FitCPX<span>Flow</span></div>
+    <div class="login-sub">Entre com sua conta Google para sincronizar seus dados na nuvem.</div>
+    <button class="login-btn" onclick="signIn()">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Entrar com Google
+    </button>
+    <div class="login-footer">Seus dados ficam salvos no Google Drive privado da sua conta.<br>Nenhum servidor externo é usado.</div>
+  </div>
+</div>
+<!-- SYNC INDICATOR -->
+<div id="sync-indicator"><span class="sync-dot"></span><span>Sincronizando...</span></div>
+
 <div id="app">
   <aside id="sidebar">
     <div class="sb-logo">
@@ -716,6 +758,7 @@ textarea{resize:vertical;min-height:80px;}
         <div style="flex:1;min-width:0"><div class="sb-user-name" id="sb-name">Personal Trainer</div><div class="sb-user-role" id="sb-studio">Studio</div></div>
         <span style="font-size:14px;color:var(--t3)">⚙️</span>
       </div>
+      <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:6px;justify-content:center;font-size:13px" onclick="signOut()" title="Sair da conta Google">🚪 Sair</button>
     </div>
   </aside>
   <div id="main">
@@ -1186,7 +1229,7 @@ DB.alunos.forEach(al=>{
 });
 if(DB.tasks.length===0)regenAllTasks();
 DB.alunos.forEach(al=>{if((al.status==='pausado'||al.status==='inativo')&&!al.statusSince)al.statusSince=todayStr();});
-function save(){localStorage.setItem(STORE_KEY,JSON.stringify(DB));}
+// save() is defined in the Auth/Drive block below
 
 /* ═══════════════════════════════
    TASK ENGINE
@@ -4931,12 +4974,174 @@ document.addEventListener('keydown',e=>{
 });
 
 /* ═══════════════════════════════
+   GOOGLE AUTH & DRIVE SYNC
+═══════════════════════════════ */
+const CLIENT_ID='175753605665-qgci1gfo3o4co7r9j76voh94pmlq4klo.apps.googleusercontent.com';
+const GDRIVE_FILENAME='fitcpxflow-data.json';
+const SCOPES='https://www.googleapis.com/auth/drive.appdata';
+
+let _gToken=null;
+let _gUser=null;
+let _syncTimer=null;
+let _driveFileId=null;
+
+// Restore session
+(()=>{
+  try{const t=JSON.parse(localStorage.getItem('_gToken_fitcpx'));if(t&&t.expires_at>Date.now())_gToken=t;}catch(e){}
+  try{_gUser=JSON.parse(localStorage.getItem('_gUser_fitcpx'));}catch(e){}
+})();
+
+function initGAuth(){
+  if(typeof google==='undefined')return;
+  window._tokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:CLIENT_ID,
+    scope:SCOPES,
+    prompt:'select_account',
+    callback:(resp)=>{
+      if(resp.error){showSyncStatus('err','Erro ao autenticar');return;}
+      _gToken={...resp,expires_at:Date.now()+(+resp.expires_in-60)*1000};
+      localStorage.setItem('_gToken_fitcpx',JSON.stringify(_gToken));
+      fetchUserInfo().then(()=>{hideLoginScreen();loadFromDrive();});
+    }
+  });
+}
+
+async function fetchUserInfo(){
+  if(!_gToken)return;
+  try{
+    const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+_gToken.access_token}});
+    const u=await r.json();
+    _gUser={name:u.name,email:u.email,picture:u.picture};
+    localStorage.setItem('_gUser_fitcpx',JSON.stringify(_gUser));
+    updateAuthUI();
+  }catch(e){}
+}
+
+function signIn(){
+  if(!window._tokenClient){initGAuth();}
+  window._tokenClient?.requestAccessToken();
+}
+
+function signOut(){
+  if(_gToken)google.accounts.oauth2.revoke(_gToken.access_token,()=>{});
+  _gToken=null;_gUser=null;_driveFileId=null;
+  localStorage.removeItem('_gToken_fitcpx');
+  localStorage.removeItem('_gUser_fitcpx');
+  showLoginScreen();
+}
+
+function updateAuthUI(){
+  if(!_gUser)return;
+  const av=document.getElementById('sb-av');
+  const nm=document.getElementById('sb-name');
+  const st=document.getElementById('sb-studio');
+  if(av){
+    if(_gUser.picture){av.innerHTML=`<img id="sb-user-avatar" src="${_gUser.picture}" alt="">`;av.style.background='transparent';av.style.padding='0';}
+    else{av.textContent=initials(_gUser.name);av.style.background='var(--green)';}
+  }
+  if(nm)nm.textContent=_gUser.name||'Usuário';
+  if(st)st.textContent=_gUser.email||'';
+}
+
+function showLoginScreen(){document.getElementById('login-screen').classList.remove('hidden');}
+function hideLoginScreen(){document.getElementById('login-screen').classList.add('hidden');}
+
+/* ─── Drive API ─── */
+async function driveRequest(url,opts={}){
+  if(!_gToken||_gToken.expires_at<Date.now()){signIn();throw new Error('Token expired');}
+  return fetch(url,{...opts,headers:{...opts.headers,Authorization:'Bearer '+_gToken.access_token}});
+}
+
+async function findDriveFile(){
+  const r=await driveRequest(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${GDRIVE_FILENAME}'&fields=files(id,name)`);
+  const d=await r.json();
+  return d.files&&d.files[0]?d.files[0].id:null;
+}
+
+async function loadFromDrive(){
+  try{
+    showSyncStatus('syncing','Carregando...');
+    const fid=await findDriveFile();
+    if(!fid){_driveFileId=null;showSyncStatus('ok','Pronto',2000);return;}
+    _driveFileId=fid;
+    const r=await driveRequest(`https://www.googleapis.com/drive/v3/files/${fid}?alt=media`);
+    const remote=await r.json();
+    if(remote&&remote.taskIdSeq){
+      DB=remote;
+      // Re-apply guards
+      if(!DB.tasks)DB.tasks=[];if(!DB.historico)DB.historico={};
+      if(!DB.waTpls)DB.waTpls=[];if(!DB.customCats)DB.customCats=[];
+      if(!DB.deletedCats)DB.deletedCats=[];if(!DB.pipeOrder)DB.pipeOrder=[];
+      if(!DB.dashPipeOrder)DB.dashPipeOrder=[];
+      if(!DB.config)DB.config={studioName:'FitCPX Flow',personalName:'',whatsapp:'',urgencyDays:3};
+      localStorage.setItem(STORE_KEY,JSON.stringify(DB));
+      seedPresetCats();renderPage();updateBadges();updateSidebar();
+    }
+    showSyncStatus('ok','Sincronizado',2000);
+  }catch(e){showSyncStatus('err','Erro ao carregar');}
+}
+
+async function saveToDrive(){
+  if(!_gToken||_gToken.expires_at<Date.now()){showSyncStatus('err','Não autenticado');return;}
+  try{
+    showSyncStatus('syncing','Salvando...');
+    const body=JSON.stringify(DB);
+    const blob=new Blob([body],{type:'application/json'});
+    let r;
+    if(_driveFileId){
+      r=await driveRequest(`https://www.googleapis.com/upload/drive/v3/files/${_driveFileId}?uploadType=media`,{method:'PATCH',body:blob,headers:{'Content-Type':'application/json'}});
+    }else{
+      // Create with metadata
+      const meta=JSON.stringify({name:GDRIVE_FILENAME,parents:['appDataFolder']});
+      const form=new FormData();
+      form.append('metadata',new Blob([meta],{type:'application/json'}));
+      form.append('file',blob);
+      r=await driveRequest('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',body:form});
+      const d=await r.json();_driveFileId=d.id;
+    }
+    showSyncStatus('ok','Salvo ✓',2000);
+  }catch(e){showSyncStatus('err','Erro ao salvar');}
+}
+
+function scheduleDriveSync(){
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(()=>{if(_gToken&&_gToken.expires_at>Date.now())saveToDrive();},1500);
+}
+
+/* ─── Sync status UI ─── */
+let _syncHideTimer=null;
+function showSyncStatus(state,msg,hideAfter=0){
+  const el=document.getElementById('sync-indicator');if(!el)return;
+  el.className='visible '+state;
+  el.innerHTML=`<span class="sync-dot"></span>${msg}`;
+  clearTimeout(_syncHideTimer);
+  if(hideAfter>0)_syncHideTimer=setTimeout(()=>el.classList.remove('visible'),hideAfter);
+}
+
+/* ─── Override save() ─── */
+const _saveLocal=()=>localStorage.setItem(STORE_KEY,JSON.stringify(DB));
+function save(){_saveLocal();scheduleDriveSync();}
+
+/* ═══════════════════════════════
    BOOT
 ═══════════════════════════════ */
 updateSidebar();
 seedPresetCats();
 nav('dashboard');
 setInterval(updateBadges,60000);
+
+// Auth boot
+window.addEventListener('load',()=>{
+  initGAuth();
+  if(_gToken&&_gToken.expires_at>Date.now()){
+    updateAuthUI();
+    hideLoginScreen();
+    // Refresh file id on boot
+    findDriveFile().then(id=>{_driveFileId=id;}).catch(()=>{});
+  }else{
+    showLoginScreen();
+  }
+});
 </script>
 </body>
 </html>
